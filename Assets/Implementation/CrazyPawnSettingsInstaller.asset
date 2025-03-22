@@ -14,3 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CrazyPawnSettingsAsset: {fileID: 11400000, guid: c3b00c709b1f94f22a212add39c80449,
     type: 2}
+  ImplementationSettings: {fileID: 11400000, guid: 96e208adbc7bd98f4b69717dbc221738,
+    type: 2}
