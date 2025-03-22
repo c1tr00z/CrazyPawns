@@ -46,7 +46,7 @@ namespace CrazyPawn.Implementation
         #region Class Implementation
 
         private void SetupCheckerboard() {
-            var sideScale = ImplementationSettings.CheckerboardScaleCoeff * ImplementationSettings.CheckerboardSquareSize * CrazyPawnSettings.CheckerboardSize;soru
+            var sideScale = ImplementationSettings.CheckerboardScaleCoeff * ImplementationSettings.CheckerboardSquareSize * CrazyPawnSettings.CheckerboardSize;
             transform.localScale = new Vector3(sideScale, 1, sideScale);
             
             CheckerboardMaterial.SetColor(ImplementationSettings.CheckerboardColorAParamName, CrazyPawnSettings.WhiteCellColor);
