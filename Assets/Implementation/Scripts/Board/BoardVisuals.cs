@@ -25,6 +25,8 @@ namespace CrazyPawn.Implementation
         [Inject] private CrazyPawnsImplSettings ImplementationSettings;
         
         [Inject] private IStateProvider StateProvider;
+        
+        [Inject] private IStateCompleter StateCompleter;
 
         #endregion
 
@@ -99,6 +101,8 @@ namespace CrazyPawn.Implementation
             CheckerboardMaterial.SetFloat(ImplementationSettings.CheckerboardSizeParamName, CrazyPawnSettings.CheckerboardSize);
             
             BoardBuilt = true;
+            
+            StateCompleter.CompleteState(State.BoardInit);
         }
 
         #endregion
