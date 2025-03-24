@@ -16,3 +16,4 @@ MonoBehaviour:
     type: 2}
   ImplementationSettings: {fileID: 11400000, guid: 96e208adbc7bd98f4b69717dbc221738,
     type: 2}
+  ResourcesSettings: {fileID: 11400000, guid: ca1379aba290ff25fa4f84bf5782a18b, type: 2}

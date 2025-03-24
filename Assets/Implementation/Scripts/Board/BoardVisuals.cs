@@ -12,6 +12,10 @@ namespace CrazyPawn.Implementation
 
         private MeshRenderer BoardMesh;
 
+        private SignalBus SignalBus;
+
+        private bool BoardBuilt = false;
+
         #endregion
         
         #region Injected Fields
@@ -19,6 +23,8 @@ namespace CrazyPawn.Implementation
         [Inject] private CrazyPawnSettings CrazyPawnSettings;
         
         [Inject] private CrazyPawnsImplSettings ImplementationSettings;
+        
+        [Inject] private IStateProvider StateProvider;
 
         #endregion
 
@@ -38,20 +44,61 @@ namespace CrazyPawn.Implementation
 
         private void Start() 
         {
-            SetupCheckerboard();
+            TryToSetupBoard(StateProvider.State);
+        }
+
+        private void OnEnable()
+        {
+            SignalBus.Subscribe<StateChangedSignal>(OnStateChanged);
+        }
+
+        private void OnDisable()
+        {
+            SignalBus.Unsubscribe<StateChangedSignal>(OnStateChanged);
+        }
+
+        #endregion
+
+        #region Zenject Events
+
+        [Inject]
+        public void Construct(SignalBus signalBus)
+        {
+            SignalBus = signalBus;
         }
 
         #endregion
 
         #region Class Implementation
 
+        private void OnStateChanged(StateChangedSignal stateChanged)
+        {
+            TryToSetupBoard(stateChanged.State);
+        }
+
+        private void TryToSetupBoard(State newState)
+        {
+            if (newState != State.BoardInit)
+            {
+                return;
+            }
+            
+            SetupCheckerboard();
+        }
+
         private void SetupCheckerboard() {
+            if (BoardBuilt) 
+            {
+                return;
+            }
             var sideScale = ImplementationSettings.CheckerboardScaleCoeff * ImplementationSettings.CheckerboardSquareSize * CrazyPawnSettings.CheckerboardSize;
             transform.localScale = new Vector3(sideScale, 1, sideScale);
             
             CheckerboardMaterial.SetColor(ImplementationSettings.CheckerboardColorAParamName, CrazyPawnSettings.WhiteCellColor);
             CheckerboardMaterial.SetColor(ImplementationSettings.CheckerboardColorBParamName, CrazyPawnSettings.BlackCellColor);
             CheckerboardMaterial.SetFloat(ImplementationSettings.CheckerboardSizeParamName, CrazyPawnSettings.CheckerboardSize);
+            
+            BoardBuilt = true;
         }
 
         #endregion

@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 using Zenject;
 namespace CrazyPawn.Implementation {
     public class CrazyPawnsSettingsInstaller : ScriptableObjectInstaller {
@@ -8,15 +7,17 @@ namespace CrazyPawn.Implementation {
 
         [SerializeField] private CrazyPawnSettings CrazyPawnSettingsAsset;
         [SerializeField] private CrazyPawnsImplSettings ImplementationSettings;
+        [SerializeField] private CrazyPawnsResourcesSettings ResourcesSettings;
 
         #endregion
         
-        #region MonoInstaller Implementation
+        #region ScriptableObjectInstaller Implementation
 
         public override void InstallBindings() 
         {
-            Container.Bind<CrazyPawnSettings>().FromInstance(CrazyPawnSettingsAsset);
-            Container.Bind<CrazyPawnsImplSettings>().FromInstance(ImplementationSettings);
+            Container.Bind<CrazyPawnSettings>().FromInstance(CrazyPawnSettingsAsset).AsSingle();
+            Container.Bind<CrazyPawnsImplSettings>().FromInstance(ImplementationSettings).AsSingle();
+            Container.Bind<CrazyPawnsResourcesSettings>().FromInstance(ResourcesSettings).AsSingle();
         }
 
         #endregion

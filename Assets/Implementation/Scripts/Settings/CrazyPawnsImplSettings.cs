@@ -7,7 +7,7 @@ namespace CrazyPawn.Implementation {
         
         [SerializeField] public string CheckerboardColorBParamName = "ColorB";
         
-        [SerializeField] public string CheckerboardSizeParamName = "ColorB";
+        [SerializeField] public string CheckerboardSizeParamName = "Size";
         
         [SerializeField] public float CheckerboardSquareSize = 1;
 

@@ -251,6 +251,7 @@ GameObject:
   m_Component:
   - component: {fileID: 760040111}
   - component: {fileID: 760040110}
+  - component: {fileID: 760040112}
   m_Layer: 0
   m_Name: SceneContext
   m_TagString: Untagged
@@ -272,7 +273,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _scriptableObjectInstallers:
   - {fileID: 11400000, guid: f4f8143b3eaa0f5929a5fb006732a6d2, type: 2}
-  _monoInstallers: []
+  _monoInstallers:
+  - {fileID: 760040112}
   _installerPrefabs: []
   _findSiblingMonoInstallers: 0
   _autoRun: 1
@@ -306,6 +308,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &760040112
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 760040109}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de6bb0c5df82422f95ee76017471bc85, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1670427660
 GameObject:
   m_ObjectHideFlags: 0
@@ -320,7 +334,7 @@ GameObject:
   - component: {fileID: 1670427661}
   - component: {fileID: 1670427665}
   m_Layer: 0
-  m_Name: Plane
+  m_Name: Checkerboard
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
