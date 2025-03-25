@@ -17,3 +17,6 @@ MonoBehaviour:
   CheckerboardSizeParamName: _Size
   CheckerboardSquareSize: 1.5
   CheckerboardScaleCoeff: 0.1
+  PawnPrefabResourceKey: Pawn
+  PawnMaterialValidKey: MaterialPawnValid
+  PawnMaterialInvalidKey: MaterialPawnInvalid

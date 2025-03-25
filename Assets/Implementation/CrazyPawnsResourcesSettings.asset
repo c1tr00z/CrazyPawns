@@ -12,4 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5d22f8a88a8412bbc7b270ae5b8a44f, type: 3}
   m_Name: CrazyPawnsResourcesSettings
   m_EditorClassIdentifier: 
+  AssetsData:
+  - Key: Pawn
+    ResourcePath: PawnImpl
+  - Key: MaterialPawnValid
+    ResourcePath: BaseMaterial
+  - Key: MaterialPawnInvalid
+    ResourcePath: DeleteMaterial
+  - Key: MaterialConnecterAvaiiable
+    ResourcePath: ActiveConnectorMaterial
   PawnPath: PawnImpl

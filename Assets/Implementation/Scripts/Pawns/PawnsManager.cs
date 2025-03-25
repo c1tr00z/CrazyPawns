@@ -1,13 +1,16 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 namespace CrazyPawn.Implementation {
-    public class PawnsManager {
+    public class PawnsManager : IPawnCreator, IPawnPooler {
 
         #region Private Fields
 
         private SignalBus SignalBus;
 
-        private Pawn PawnPrefabObject;
+        private Queue<Pawn> Cached = new();
+        
+        private Transform Pool;
 
         #endregion
         
@@ -15,18 +18,10 @@ namespace CrazyPawn.Implementation {
 
         [Inject] private CrazyPawnSettings CrazyPawnSettings;
 
-        [Inject] private CrazyPawnsImplSettings ImplementationSettings;
-        
-        [Inject] private CrazyPawnsResourcesSettings ResourcesSettings;
-        
-        #endregion
-
-        #region Accessors
-
-        private Pawn PawnPrefab => CommonUtils.GetCached(ref PawnPrefabObject, () => Resources.Load<Pawn>(ResourcesSettings.PawnPath));
+        [Inject] private PawnFactory PawnFactory;
 
         #endregion
-
+        
         #region Constructors
 
         [Inject]
@@ -47,6 +42,46 @@ namespace CrazyPawn.Implementation {
 
         #endregion
 
+        #region IPawnCreator Implementation
+
+        public Pawn Create() 
+        {
+            Pawn pawn = null;
+            if (Cached.Count > 0) 
+            {
+                pawn = Cached.Dequeue();
+                pawn.transform.parent = null;
+            } 
+            else 
+            {
+                pawn = PawnFactory.Create();
+            }
+            PlacePawn(pawn);
+            return pawn;
+        }
+
+        #endregion
+
+        #region IPawnPooler Implementation
+
+        public void ReturnToPool(Pawn pawn)
+        {
+            if (Pool is null) 
+            {
+                Pool = new GameObject("PawnsPool").transform;
+                Pool.gameObject.SetActive(false);
+            }
+            if (Cached.Contains(pawn))
+            {
+                return;
+            }
+            
+            Cached.Enqueue(pawn);
+            pawn.transform.parent = Pool;
+        }
+
+        #endregion
+
         #region Class Implementation
 
         private void OnStateChanged(StateChangedSignal stateChanged) 
@@ -63,12 +98,11 @@ namespace CrazyPawn.Implementation {
         {
             for (int i = 0; i < CrazyPawnSettings.InitialPawnCount; i++) 
             {
-                SpawnPawn();
+                Create();
             }
         }
 
-        private void SpawnPawn() 
-        {
+        private void PlacePawn(Pawn pawn) {
             var radius = Random.Range(0, CrazyPawnSettings.InitialZoneRadius);
             var angle = Random.Range(0, 360);
             var point = new Vector3(
@@ -76,8 +110,7 @@ namespace CrazyPawn.Implementation {
                 0,
                 radius * Mathf.Sin(angle * Mathf.Deg2Rad)
             );
-            var newPawn = Object.Instantiate(PawnPrefab);
-            newPawn.transform.position = point;
+            pawn.transform.position = point;
         }
 
         #endregion

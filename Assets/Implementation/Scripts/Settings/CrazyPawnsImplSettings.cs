@@ -13,6 +13,12 @@ namespace CrazyPawn.Implementation {
 
         [SerializeField] public float CheckerboardScaleCoeff = 1;
 
+        [SerializeField] public string PawnPrefabResourceKey;
+        
+        [SerializeField] public string PawnMaterialValidKey;
+        
+        [SerializeField] public string PawnMaterialInvalidKey;
+        
         #endregion
     }
 }
