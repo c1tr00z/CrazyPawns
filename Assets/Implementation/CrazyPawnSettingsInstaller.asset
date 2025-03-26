@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83dbcb393e3a4324bdec0fc7b9a4a404, type: 3}
   m_Name: CrazyPawnSettingsInstaller
   m_EditorClassIdentifier: 
-  CrazyPawnSettingsAsset: {fileID: 11400000, guid: c3b00c709b1f94f22a212add39c80449,
+  _crazyPawnSettingsAsset: {fileID: 11400000, guid: c3b00c709b1f94f22a212add39c80449,
     type: 2}
-  ImplementationSettings: {fileID: 11400000, guid: 96e208adbc7bd98f4b69717dbc221738,
+  _implementationSettings: {fileID: 11400000, guid: 96e208adbc7bd98f4b69717dbc221738,
     type: 2}
+  _resourcesSettings: {fileID: 11400000, guid: ca1379aba290ff25fa4f84bf5782a18b, type: 2}

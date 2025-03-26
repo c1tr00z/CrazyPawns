@@ -6,17 +6,19 @@ namespace CrazyPawn.Implementation {
 
         #region Serialized Fields
 
-        [SerializeField] private CrazyPawnSettings CrazyPawnSettingsAsset;
-        [SerializeField] private CrazyPawnsImplSettings ImplementationSettings;
+        [SerializeField] private CrazyPawnSettings _crazyPawnSettingsAsset;
+        [SerializeField] private CrazyPawnsImplSettings _implementationSettings;
+        [SerializeField] private CrazyPawnsResourcesSettings _resourcesSettings;
 
         #endregion
         
-        #region MonoInstaller Implementation
+        #region ScriptableObjectInstaller Implementation
 
         public override void InstallBindings() 
         {
-            Container.Bind<CrazyPawnSettings>().FromInstance(CrazyPawnSettingsAsset);
-            Container.Bind<CrazyPawnsImplSettings>().FromInstance(ImplementationSettings);
+            Container.Bind<CrazyPawnSettings>().FromInstance(_crazyPawnSettingsAsset).AsSingle();
+            Container.Bind<CrazyPawnsImplSettings>().FromInstance(_implementationSettings).AsSingle();
+            Container.Bind<CrazyPawnsResourcesSettings>().FromInstance(_resourcesSettings).AsSingle();
         }
 
         #endregion

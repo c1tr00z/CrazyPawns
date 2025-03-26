@@ -8,5 +8,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/PawnField.unity
     guid: 99c9720ab356a0642a771bea13969a05
-  m_configObjects: {}
-  m_UseUCBPForAssetBundles: 0
+  m_configObjects:
+    com.unity.input.settings: {fileID: 11400000, guid: 81483de07f9e8a0db95fe70cb50c5e95,
+      type: 2}
