@@ -7,12 +7,17 @@ namespace CrazyPawn.Implementation
 
         public override void InstallBindings()
         {
+            //Signals
             SignalBusInstaller.Install(Container);
             Container.DeclareSignal<IStateChangedSignal>().OptionalSubscriber();
             Container.DeclareSignal<IPawnConnectorActivate>().OptionalSubscriber();
             Container.DeclareSignal<IPawnConnectorDeactivate>().OptionalSubscriber();
             Container.DeclareSignal<IPawnDraggedSignal>().OptionalSubscriber();
             Container.DeclareSignal<IPawnRemovedSignal>().OptionalSubscriber();
+            Container.DeclareSignal<ISimpleDragStartedSignal>().OptionalSubscriber();
+            Container.DeclareSignal<ISimpleDragSignal>().OptionalSubscriber();
+            Container.DeclareSignal<ISimpleDragFinishedSignal>().OptionalSubscriber();
+            
             Container.Bind<IInitializable>().To<SceneStarter>().AsSingle();
             Container.Bind<IAssetProvider>().To<AssetManager>().AsSingle();
             Container.Bind(typeof(IPawnCreator), typeof(IPawnPooler)).To<PawnsManager>().AsSingle().NonLazy();

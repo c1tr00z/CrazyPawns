@@ -23,6 +23,8 @@ namespace CrazyPawn.Implementation
 
         private ConnectorProviderSignal _connectorProviderSignal;
 
+        private SimpleDragSignal _simpleDragSignal;
+
         #endregion
 
         #region Injected Fields
@@ -42,6 +44,8 @@ namespace CrazyPawn.Implementation
         private PawnProviderSignal PawnProviderSignal => CommonUtils.GetCached(ref _pawnDraggedSignal, () => new PawnProviderSignal());
 
         private ConnectorProviderSignal ConnectorProviderSignal => CommonUtils.GetCached(ref _connectorProviderSignal, () => new ConnectorProviderSignal());
+
+        private SimpleDragSignal SimpleDragSignal => CommonUtils.GetCached(ref _simpleDragSignal, () => new SimpleDragSignal());
 
         #endregion
         
@@ -142,11 +146,22 @@ namespace CrazyPawn.Implementation
                     _activeConnector = connector;
                     FireConnectorActivateSignal(connector);
                 }
+            } 
+            else 
+            {
+                SimpleDragSignal.UpdateMousePosition(newPosition);
+                _signalBus.Fire<ISimpleDragStartedSignal>(SimpleDragSignal);
             }
         }
 
         private void CrazyPawnsInputOnDrag(Vector2 newPosition) {
-            if (_activePawn is null) {
+            if (_activePawn is null)
+            {
+                if (_activeConnector is null) 
+                {
+                    SimpleDragSignal.UpdateMousePosition(newPosition);
+                    _signalBus.Fire<ISimpleDragSignal>(SimpleDragSignal);
+                }
                 return;
             }
             var ray = Camera.ScreenPointToRay(newPosition);
@@ -166,6 +181,12 @@ namespace CrazyPawn.Implementation
 
         private void InputOnDragFinished(Vector2 newPosition) 
         {
+            if (_activePawn is null && _activeConnector is null) 
+            {
+                SimpleDragSignal.UpdateMousePosition(newPosition);
+                _signalBus.Fire<ISimpleDragSignal>(SimpleDragSignal);
+                return;
+            }
             if (_activePawn is not null && !IsPointInsideBoard(_activePawn.transform.position))
             {
                 _pawnPooler.ReturnToPool(_activePawn);
