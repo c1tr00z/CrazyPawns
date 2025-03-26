@@ -1,13 +1,16 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UIElements;
 using Zenject;
 namespace CrazyPawn.Implementation 
 {
     public class CrazyPawnsInput : MonoBehaviour 
     {
-        public static event Action<Vector2> Drag; 
+        public static event Action<Vector2> Tap;
+        
+        public static event Action<Vector2> DragStarted;
+        public static event Action<Vector2> Drag;
+        public static event Action<Vector2> DragFinished;
         
         #region Private Fields
 
@@ -23,9 +26,16 @@ namespace CrazyPawn.Implementation
 
         #endregion
 
+        #region Accessors
+
+        private Vector2 CurrentMousePosition => Mouse.current.position.value;
+
+        #endregion
+
         #region Unity Events
 
-        private void LateUpdate() {
+        private void LateUpdate() 
+        {
             if (!IsPressed) 
             {
                 return;    
@@ -36,7 +46,7 @@ namespace CrazyPawn.Implementation
             }
             if (!HoldStarted) {
                 HoldStarted = true;
-                FireEvent(InputEventType.HoldStarted);
+                DragStarted?.Invoke(CurrentMousePosition);
             }
             Drag?.Invoke(Mouse.current.position.value);
         }
@@ -72,19 +82,11 @@ namespace CrazyPawn.Implementation
                 HoldStarted = false;
                 if (Time.time - _mouseDownTime < HoldThreshold)
                 {
-                    FireEvent(InputEventType.Tap);
+                    Tap?.Invoke(CurrentMousePosition);
                     return;
-                } 
-                else 
-                {
-                    FireEvent(InputEventType.HoldReleased);
                 }
+                DragFinished?.Invoke(CurrentMousePosition);
             }
-        }
-
-        private void FireEvent(InputEventType type) 
-        {
-            SignalBus.Fire(InputSignal.MakeNew(type, Mouse.current.position.value));
         }
 
         #endregion

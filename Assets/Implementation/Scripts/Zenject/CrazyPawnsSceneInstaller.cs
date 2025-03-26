@@ -9,7 +9,8 @@ namespace CrazyPawn.Implementation
         {
             SignalBusInstaller.Install(Container);
             Container.DeclareSignal<StateChangedSignal>().OptionalSubscriber();
-            Container.DeclareSignal<InputSignal>().OptionalSubscriber();
+            Container.DeclareSignal<PawnConnectorActivate>().OptionalSubscriber();
+            Container.DeclareSignal<PawnConnectorDeactivate>().OptionalSubscriber();
             Container.Bind<IInitializable>().To<SceneStarter>().AsSingle();
             Container.Bind<IAssetProvider>().To<AssetManager>().AsSingle();
             Container.Bind(typeof(IPawnCreator), typeof(IPawnPooler)).To<PawnsManager>().AsSingle().NonLazy();

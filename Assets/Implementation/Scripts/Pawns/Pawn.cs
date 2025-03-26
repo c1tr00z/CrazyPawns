@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
@@ -5,11 +6,19 @@ namespace CrazyPawn.Implementation
 {
     public class Pawn : MonoBehaviour 
     {
+        #region Events
+
+        public event Action StateChanged;
+
+        #endregion
+        
         #region Private Fields
 
         private Material ValidStateMaterial;
         
         private Material InvalidStateMaterial;
+
+        private SignalBus SignalBus;
 
         #endregion
 
@@ -25,8 +34,6 @@ namespace CrazyPawn.Implementation
 
         [SerializeField] private MeshRenderer Body;
 
-        [SerializeField] private List<MeshRenderer> Connectors = new();
-
         #endregion
 
         #region Accessors
@@ -38,7 +45,19 @@ namespace CrazyPawn.Implementation
 
         private Material MaterialInvalid =>
             CommonUtils.GetCached(ref InvalidStateMaterial, () => AssetProvider.ProvideAssetByKey<Material>(ImplementationSettings.PawnMaterialInvalidKey));
+
+        public Material CurrentMaterial => State == PawnState.Valid ? MaterialValid : MaterialInvalid;
         
+        #endregion
+
+        #region Zenject Events
+
+        [Inject]
+        public void Construct(SignalBus signalBus) 
+        {
+            SignalBus = signalBus;
+        }
+
         #endregion
 
         #region Class Implementation
@@ -50,9 +69,8 @@ namespace CrazyPawn.Implementation
                 return;
             }
             State = newState;
-            var newMaterial = State == PawnState.Valid ? MaterialValid : MaterialInvalid;
-            Body.sharedMaterial = newMaterial;
-            Connectors.ForEach(c => c.sharedMaterial = newMaterial);
+            Body.sharedMaterial = CurrentMaterial;
+            StateChanged?.Invoke();
         }
 
         #endregion

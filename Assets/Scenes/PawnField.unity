@@ -351,7 +351,7 @@ GameObject:
   - component: {fileID: 1670427662}
   - component: {fileID: 1670427661}
   - component: {fileID: 1670427665}
-  m_Layer: 7
+  m_Layer: 8
   m_Name: Checkerboard
   m_TagString: Untagged
   m_Icon: {fileID: 0}

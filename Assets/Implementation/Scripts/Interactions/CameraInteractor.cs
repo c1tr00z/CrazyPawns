@@ -1,8 +1,10 @@
 using System;
 using UnityEngine;
 using Zenject;
-namespace CrazyPawn.Implementation {
-    public class CameraInteractor : MonoBehaviour {
+namespace CrazyPawn.Implementation 
+{
+    public class CameraInteractor : MonoBehaviour 
+    {
 
         #region Private Fields
 
@@ -11,6 +13,8 @@ namespace CrazyPawn.Implementation {
         private Camera CameraObject;
 
         private Pawn ActivePawn;
+
+        private PawnConnector ActiveConnector;
 
         private Vector2 BoardMinCoord;
         
@@ -36,7 +40,24 @@ namespace CrazyPawn.Implementation {
         
         #region Unity Events
 
-        private void Start() {
+        private void OnEnable() 
+        {
+            CrazyPawnsInput.Tap += InputOnTap;
+            CrazyPawnsInput.DragStarted += InputOnDragStarted;
+            CrazyPawnsInput.Drag += CrazyPawnsInputOnDrag;
+            CrazyPawnsInput.DragFinished += InputOnDragFinished;
+        }
+
+        private void OnDisable() 
+        {
+            CrazyPawnsInput.Tap -= InputOnTap;
+            CrazyPawnsInput.DragStarted -= InputOnDragStarted;
+            CrazyPawnsInput.Drag -= CrazyPawnsInputOnDrag;
+            CrazyPawnsInput.DragFinished -= InputOnDragFinished;
+        }
+
+        private void Start() 
+        {
             var boardSideSize = CrazyPawnSettings.CheckerboardSize * ImplementationSettings.CheckerboardSquareSize;
             var boardHalfSize = boardSideSize / 2;
             BoardMinCoord = new Vector2(
@@ -49,10 +70,48 @@ namespace CrazyPawn.Implementation {
                 );
         }
 
-        private void OnEnable() 
+        #endregion
+
+        #region Zenject Events
+
+        [Inject]
+        public void Construct(SignalBus signalBus) 
         {
-            SignalBus.Subscribe<InputSignal>(OnInputSignal);
-            CrazyPawnsInput.Drag += CrazyPawnsInputOnDrag;
+            SignalBus = signalBus;
+        }
+
+        #endregion
+
+        #region Class Implementation
+
+        private void InputOnTap(Vector2 newPosition) 
+        {
+            throw new NotImplementedException();
+        }
+
+        private void InputOnDragStarted(Vector2 newPosition) 
+        {
+            var ray = Camera.ScreenPointToRay(newPosition);
+            if (Physics.Raycast(ray, out RaycastHit hitInfo, 100, LayerMask.GetMask("Connectors", "Pawn"))) {
+                if (hitInfo.transform.gameObject.layer == LayerMask.NameToLayer("Pawn")) 
+                {
+                    var pawn = hitInfo.transform.GetComponentInParent<Pawn>();
+                    if (pawn is null) {
+                        return;
+                    }
+                    ActivePawn = pawn;
+                    return;
+                }
+                if (hitInfo.transform.gameObject.layer == LayerMask.NameToLayer("Connectors")) 
+                {
+                    var connector = hitInfo.transform.GetComponent<PawnConnector>();
+                    if (connector is null) {
+                        return;
+                    }
+                    ActiveConnector = connector;
+                    SignalBus.Fire(PawnConnectorActivate.MakeNew(ActiveConnector));
+                }
+            }
         }
 
         private void CrazyPawnsInputOnDrag(Vector2 newPosition) {
@@ -69,48 +128,19 @@ namespace CrazyPawn.Implementation {
             }
         }
 
-        private void OnDisable() 
+        private void InputOnDragFinished(Vector2 newPosition) 
         {
-            SignalBus.Unsubscribe<InputSignal>(OnInputSignal);
-            CrazyPawnsInput.Drag -= CrazyPawnsInputOnDrag;    
-        }
-
-        #endregion
-
-        #region Zenject Events
-
-        [Inject]
-        public void Construct(SignalBus signalBus)
-        {
-            SignalBus = signalBus;
-        }
-
-        #endregion
-
-        #region Class Implementation
-
-        private void OnInputSignal(InputSignal inputSignal) 
-        {
-            switch (inputSignal.Type) {
-                case InputEventType.HoldStarted:
-                    var ray = Camera.ScreenPointToRay(inputSignal.ScreenPosition);
-                    if (Physics.Raycast(ray, out RaycastHit hitInfo)) {
-                        var pawn = hitInfo.transform.GetComponentInParent<Pawn>();
-                        if (pawn is null) {
-                            Debug.LogError("no pawn");
-                            return;
-                        }
-                        ActivePawn = pawn;
-                    }
-                    break;
-                case InputEventType.HoldReleased:
-                    if (ActivePawn is not null && !IsPointInsideBoard(ActivePawn.transform.position))
-                    {
-                        PawnPooler.ReturnToPool(ActivePawn);
-                    }
-                    ActivePawn = null;
-                    break;
+            if (ActivePawn is not null && !IsPointInsideBoard(ActivePawn.transform.position))
+            {
+                PawnPooler.ReturnToPool(ActivePawn);
             }
+            SignalBus.Fire(new PawnConnectorDeactivate());
+            if (ActiveConnector is not null) 
+            {
+                
+            }
+            ActivePawn = null;
+            ActiveConnector = null;
         }
 
         private bool IsPointInsideBoard(Vector3 point) 

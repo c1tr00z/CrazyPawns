@@ -19,6 +19,8 @@ namespace CrazyPawn.Implementation {
         
         [SerializeField] public string PawnMaterialInvalidKey;
         
+        [SerializeField] public string ConnectorMaterialActiveKey;
+        
         #endregion
     }
 }
