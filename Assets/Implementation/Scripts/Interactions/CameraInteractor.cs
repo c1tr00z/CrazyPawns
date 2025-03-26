@@ -1,43 +1,47 @@
-using System;
 using UnityEngine;
 using Zenject;
 namespace CrazyPawn.Implementation 
 {
+    [RequireComponent(typeof(Camera))]
     public class CameraInteractor : MonoBehaviour 
     {
         #region Private Fields
 
-        private SignalBus SignalBus;
+        private SignalBus _signalBus;
 
-        private Camera CameraObject;
+        private Camera _cameraObject;
 
-        private Pawn ActivePawn;
+        private Pawn _activePawn;
 
-        private PawnConnector ActiveConnector;
+        private PawnConnector _activeConnector;
 
-        private Vector2 BoardMinCoord;
+        private Vector2 _boardMinCoord;
         
-        private Vector2 BoardMaxCoord;
+        private Vector2 _boardMaxCoord;
 
         private PawnProviderSignal _pawnDraggedSignal;
+
+        private ConnectorProviderSignal _connectorProviderSignal;
 
         #endregion
 
         #region Injected Fields
 
-        [Inject] private CrazyPawnSettings CrazyPawnSettings;
+        [Inject] private CrazyPawnSettings _crazyPawnSettings;
         
-        [Inject] private CrazyPawnsImplSettings ImplementationSettings;
+        [Inject] private CrazyPawnsImplSettings _implementationSettings;
 
-        [Inject] private IPawnPooler PawnPooler;
+        [Inject] private IPawnPooler _pawnPooler;
 
         #endregion
 
         #region Accessors
 
-        private Camera Camera => CommonUtils.GetCached(ref CameraObject, GetComponent<Camera>);
+        private Camera Camera => this.GetCachedComponent(ref _cameraObject);
 
         private PawnProviderSignal PawnProviderSignal => CommonUtils.GetCached(ref _pawnDraggedSignal, () => new PawnProviderSignal());
+
+        private ConnectorProviderSignal ConnectorProviderSignal => CommonUtils.GetCached(ref _connectorProviderSignal, () => new ConnectorProviderSignal());
 
         #endregion
         
@@ -61,13 +65,13 @@ namespace CrazyPawn.Implementation
 
         private void Start() 
         {
-            var boardSideSize = CrazyPawnSettings.CheckerboardSize * ImplementationSettings.CheckerboardSquareSize;
+            var boardSideSize = _crazyPawnSettings.CheckerboardSize * _implementationSettings.CheckerboardSquareSize;
             var boardHalfSize = boardSideSize / 2;
-            BoardMinCoord = new Vector2(
+            _boardMinCoord = new Vector2(
                 -boardHalfSize,
                 -boardHalfSize
                 );
-            BoardMaxCoord = new Vector2(
+            _boardMaxCoord = new Vector2(
                 boardHalfSize, 
                 boardHalfSize
                 );
@@ -80,7 +84,7 @@ namespace CrazyPawn.Implementation
         [Inject]
         public void Construct(SignalBus signalBus) 
         {
-            SignalBus = signalBus;
+            _signalBus = signalBus;
         }
 
         #endregion
@@ -97,20 +101,22 @@ namespace CrazyPawn.Implementation
                     if (connector is null) {
                         return;
                     }
-                    if (ActiveConnector is null) 
+                    if (_activeConnector is null) 
                     {
-                        ActiveConnector = connector;
-                        SignalBus.Fire(PawnConnectorActivate.MakeNew(connector));
+                        _activeConnector = connector;
+                        FireConnectorActivateSignal(connector);
                     } 
                     else 
                     {
-                        SignalBus.Fire(PawnConnectorDeactivate.MakeNew(connector));
-                        ActiveConnector = null;
+                        FireConnectorDeactivateSignal(connector);
+                        _activeConnector = null;
                     }
                 }
-            } else {
-                SignalBus.Fire(PawnConnectorDeactivate.MakeNew(null));
-                ActiveConnector = null;
+            }
+            else 
+            {
+                FireConnectorDeactivateSignal(null);
+                _activeConnector = null;
             }
         }
 
@@ -124,7 +130,7 @@ namespace CrazyPawn.Implementation
                     if (pawn is null) {
                         return;
                     }
-                    ActivePawn = pawn;
+                    _activePawn = pawn;
                     return;
                 }
                 if (hitInfo.transform.gameObject.layer == LayerMask.NameToLayer("Connectors")) 
@@ -133,14 +139,14 @@ namespace CrazyPawn.Implementation
                     if (connector is null) {
                         return;
                     }
-                    ActiveConnector = connector;
-                    SignalBus.Fire(PawnConnectorActivate.MakeNew(connector));
+                    _activeConnector = connector;
+                    FireConnectorActivateSignal(connector);
                 }
             }
         }
 
         private void CrazyPawnsInputOnDrag(Vector2 newPosition) {
-            if (ActivePawn is null) {
+            if (_activePawn is null) {
                 return;
             }
             var ray = Camera.ScreenPointToRay(newPosition);
@@ -148,21 +154,21 @@ namespace CrazyPawn.Implementation
             if (plane.Raycast(ray, out float distance))
             {
                 var point = ray.GetPoint(distance);
-                ActivePawn.transform.position = point;
-                ActivePawn.SetState(IsPointInsideBoard(point) ? PawnState.Valid : PawnState.Invalid);
-                if (PawnProviderSignal.Pawn != ActivePawn) 
+                _activePawn.transform.position = point;
+                _activePawn.SetState(IsPointInsideBoard(point) ? PawnState.Valid : PawnState.Invalid);
+                if (PawnProviderSignal.Pawn != _activePawn) 
                 {
-                    PawnProviderSignal.UpdatePawn(ActivePawn);
+                    PawnProviderSignal.UpdatePawn(_activePawn);
                 }
-                SignalBus.Fire<IPawnDraggedSignal>(PawnProviderSignal);
+                _signalBus.Fire<IPawnDraggedSignal>(PawnProviderSignal);
             }
         }
 
         private void InputOnDragFinished(Vector2 newPosition) 
         {
-            if (ActivePawn is not null && !IsPointInsideBoard(ActivePawn.transform.position))
+            if (_activePawn is not null && !IsPointInsideBoard(_activePawn.transform.position))
             {
-                PawnPooler.ReturnToPool(ActivePawn);
+                _pawnPooler.ReturnToPool(_activePawn);
             }
 
             var ray = Camera.ScreenPointToRay(newPosition);
@@ -170,14 +176,34 @@ namespace CrazyPawn.Implementation
             if (Physics.Raycast(ray, out RaycastHit hitInfo, 100, LayerMask.GetMask("Connectors"))) {
                 connector = hitInfo.transform.GetComponent<PawnConnector>();
             }
-            SignalBus.Fire(PawnConnectorDeactivate.MakeNew(connector));
-            ActiveConnector = null;
-            ActivePawn = null;
+            FireConnectorDeactivateSignal(connector);
+            _activeConnector = null;
+            _activePawn = null;
         }
 
         private bool IsPointInsideBoard(Vector3 point) 
         {
-            return point.x >= BoardMinCoord.x && point.z >= BoardMinCoord.y && point.x <= BoardMaxCoord.x && point.z <= BoardMaxCoord.y;
+            return point.x >= _boardMinCoord.x && point.z >= _boardMinCoord.y && point.x <= _boardMaxCoord.x && point.z <= _boardMaxCoord.y;
+        }
+
+        private void FireConnectorActivateSignal(PawnConnector connector)
+        {
+            if (ConnectorProviderSignal.Connector != connector) 
+            {
+                ConnectorProviderSignal.UpdateConnector(connector);
+            }
+            
+            _signalBus.Fire<IPawnConnectorActivate>(ConnectorProviderSignal);
+        }
+
+        private void FireConnectorDeactivateSignal(PawnConnector connector)
+        {
+            if (ConnectorProviderSignal.Connector != connector) 
+            {
+                ConnectorProviderSignal.UpdateConnector(connector);
+            }
+            
+            _signalBus.Fire<IPawnConnectorDeactivate>(ConnectorProviderSignal);
         }
 
         #endregion

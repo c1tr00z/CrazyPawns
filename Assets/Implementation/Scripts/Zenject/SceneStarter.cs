@@ -6,7 +6,7 @@ namespace CrazyPawn.Implementation
     {
         #region Injected Fields
 
-        [Inject] private IStateCompleter StateCompleter;
+        [Inject] private IStateCompleter _stateCompleter;
 
         #endregion
         
@@ -14,7 +14,7 @@ namespace CrazyPawn.Implementation
         
         public void Initialize()
         {
-            StateCompleter.CompleteState(State.Init);
+            _stateCompleter.CompleteState(State.Init);
         }
         
         #endregion

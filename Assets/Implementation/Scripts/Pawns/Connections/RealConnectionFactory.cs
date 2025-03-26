@@ -1,13 +1,13 @@
 using CrazyPawn.Implementation;
 using Zenject;
-namespace Implementation.Scripts.Pawns.Connections {
+namespace CrazyPawn.Implementation {
     public class RealConnectionFactory : IFactory<Connection> {
         
         #region Private Fields
 
-        private Connection ConnectionPrefabObject;
+        private Connection _connectionPrefabObject;
 
-        private DiContainer Container;
+        private DiContainer _container;
 
         #endregion
         
@@ -22,7 +22,7 @@ namespace Implementation.Scripts.Pawns.Connections {
         #region Accessors
 
         private Connection ConnectionPrefab =>
-            CommonUtils.GetCached(ref ConnectionPrefabObject, 
+            CommonUtils.GetCached(ref _connectionPrefabObject, 
                 () => AssetProvider.ProvideAssetByKey<Connection>(ImplementationSettings.ConnectionPrefabResourceKey));
 
         #endregion
@@ -31,7 +31,7 @@ namespace Implementation.Scripts.Pawns.Connections {
 
         public RealConnectionFactory(DiContainer container) 
         {
-            Container = container;
+            _container = container;
         }
 
         #endregion
@@ -40,7 +40,7 @@ namespace Implementation.Scripts.Pawns.Connections {
 
         public Connection Create() 
         {
-            return Container.InstantiatePrefabForComponent<Connection>(ConnectionPrefab);
+            return _container.InstantiatePrefabForComponent<Connection>(ConnectionPrefab);
         }
 
         #endregion

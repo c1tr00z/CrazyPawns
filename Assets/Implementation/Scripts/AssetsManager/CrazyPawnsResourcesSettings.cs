@@ -25,8 +25,6 @@ namespace CrazyPawn.Implementation {
 
         [SerializeField] public List<AssetData> AssetsData = new();
 
-        [SerializeField] public string PawnPath;
-
         #endregion
     }
 }

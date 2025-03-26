@@ -7,22 +7,19 @@ namespace CrazyPawn.Implementation
     public class CrazyPawnsInput : MonoBehaviour 
     {
         public static event Action<Vector2> Tap;
-        
         public static event Action<Vector2> DragStarted;
         public static event Action<Vector2> Drag;
         public static event Action<Vector2> DragFinished;
         
         #region Private Fields
 
-        private readonly float HoldThreshold = 0.25f;
+        private readonly float _holdThreshold = 0.25f;
 
         private float _mouseDownTime;
 
-        private bool IsPressed;
+        private bool _isPressed;
         
-        private bool HoldStarted;
-            
-        private SignalBus SignalBus;
+        private bool _holdStarted;
 
         #endregion
 
@@ -36,29 +33,19 @@ namespace CrazyPawn.Implementation
 
         private void LateUpdate() 
         {
-            if (!IsPressed) 
+            if (!_isPressed) 
             {
                 return;    
             }
-            if (Time.time - _mouseDownTime < HoldThreshold) 
+            if (Time.time - _mouseDownTime < _holdThreshold) 
             {
                 return;
             }
-            if (!HoldStarted) {
-                HoldStarted = true;
+            if (!_holdStarted) {
+                _holdStarted = true;
                 DragStarted?.Invoke(CurrentMousePosition);
             }
             Drag?.Invoke(Mouse.current.position.value);
-        }
-
-        #endregion
-        
-        #region Zenject Events
-
-        [Inject]
-        public void Construct(SignalBus signalBus) 
-        {
-            SignalBus = signalBus;
         }
 
         #endregion
@@ -68,19 +55,19 @@ namespace CrazyPawn.Implementation
         public void OnTap(InputAction.CallbackContext context) 
         {
             var newIsPressed = context.ReadValue<float>() > 0;
-            if (IsPressed == newIsPressed) 
+            if (_isPressed == newIsPressed) 
             {
                 return;
             }
-            IsPressed = newIsPressed;
-            if (IsPressed) 
+            _isPressed = newIsPressed;
+            if (_isPressed) 
             {
                 _mouseDownTime = Time.time;
             } 
             else 
             {
-                HoldStarted = false;
-                if (Time.time - _mouseDownTime < HoldThreshold)
+                _holdStarted = false;
+                if (Time.time - _mouseDownTime < _holdThreshold)
                 {
                     Tap?.Invoke(CurrentMousePosition);
                     return;

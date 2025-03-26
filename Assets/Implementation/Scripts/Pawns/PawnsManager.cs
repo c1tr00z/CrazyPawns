@@ -6,11 +6,11 @@ namespace CrazyPawn.Implementation {
 
         #region Private Fields
 
-        private SignalBus SignalBus;
+        private SignalBus _signalBus;
 
-        private Queue<Pawn> Cached = new();
+        private Queue<Pawn> _cached = new();
         
-        private Transform Pool;
+        private Transform _pool;
 
         private PawnProviderSignal _pawnRemovedSignal;
 
@@ -18,9 +18,9 @@ namespace CrazyPawn.Implementation {
         
         #region Injected Fields
 
-        [Inject] private CrazyPawnSettings CrazyPawnSettings;
+        [Inject] private CrazyPawnSettings _crazyPawnSettings;
 
-        [Inject] private PawnFactory PawnFactory;
+        [Inject] private PawnFactory _pawnFactory;
 
         #endregion
 
@@ -35,9 +35,9 @@ namespace CrazyPawn.Implementation {
         [Inject]
         public PawnsManager(SignalBus signalBus) 
         {
-            SignalBus = signalBus;
-            SignalBus.Subscribe<StateChangedSignal>(OnStateChanged);
-            SignalBus.Subscribe<IPawnRemovedSignal>(OnPawnRemoved);
+            _signalBus = signalBus;
+            _signalBus.Subscribe<IStateChangedSignal>(OnStateChanged);
+            _signalBus.Subscribe<IPawnRemovedSignal>(OnPawnRemoved);
         }
 
         #endregion
@@ -46,8 +46,8 @@ namespace CrazyPawn.Implementation {
 
         ~PawnsManager()
         {
-            SignalBus.Unsubscribe<StateChangedSignal>(OnStateChanged);
-            SignalBus.Unsubscribe<IPawnRemovedSignal>(OnPawnRemoved);
+            _signalBus.Unsubscribe<IStateChangedSignal>(OnStateChanged);
+            _signalBus.Unsubscribe<IPawnRemovedSignal>(OnPawnRemoved);
         }
 
         #endregion
@@ -57,14 +57,14 @@ namespace CrazyPawn.Implementation {
         public Pawn Create() 
         {
             Pawn pawn = null;
-            if (Cached.Count > 0) 
+            if (_cached.Count > 0) 
             {
-                pawn = Cached.Dequeue();
+                pawn = _cached.Dequeue();
                 pawn.transform.parent = null;
             } 
             else 
             {
-                pawn = PawnFactory.Create();
+                pawn = _pawnFactory.Create();
             }
             pawn.SetState(PawnState.Valid);
             PlacePawn(pawn);
@@ -81,31 +81,31 @@ namespace CrazyPawn.Implementation {
             {
                 return;
             }
-            if (Pool is null) 
+            if (_pool is null) 
             {
-                Pool = new GameObject("PawnsPool").transform;
-                Pool.gameObject.SetActive(false);
+                _pool = new GameObject("PawnsPool").transform;
+                _pool.gameObject.SetActive(false);
             }
-            if (Cached.Contains(pawn))
+            if (_cached.Contains(pawn))
             {
                 return;
             }
             
-            Cached.Enqueue(pawn);
-            pawn.transform.parent = Pool;
+            _cached.Enqueue(pawn);
+            pawn.transform.parent = _pool;
             
             if (PawnRemovedSignal.Pawn != pawn) 
             {
                 PawnRemovedSignal.UpdatePawn(pawn);
             }
-            SignalBus.Fire<IPawnRemovedSignal>(PawnRemovedSignal);
+            _signalBus.Fire<IPawnRemovedSignal>(PawnRemovedSignal);
         }
 
         #endregion
 
         #region Class Implementation
 
-        private void OnStateChanged(StateChangedSignal stateChanged) 
+        private void OnStateChanged(IStateChangedSignal stateChanged) 
         {
             if (stateChanged.State != State.PawnsInit)
             {
@@ -117,14 +117,14 @@ namespace CrazyPawn.Implementation {
         
         private void SpawnPawns() 
         {
-            for (int i = 0; i < CrazyPawnSettings.InitialPawnCount; i++) 
+            for (int i = 0; i < _crazyPawnSettings.InitialPawnCount; i++) 
             {
                 Create();
             }
         }
 
         private void PlacePawn(Pawn pawn) {
-            var radius = Random.Range(0, CrazyPawnSettings.InitialZoneRadius);
+            var radius = Random.Range(0, _crazyPawnSettings.InitialZoneRadius);
             var angle = Random.Range(0, 360);
             var point = new Vector3(
                 radius * Mathf.Cos(angle * Mathf.Deg2Rad),

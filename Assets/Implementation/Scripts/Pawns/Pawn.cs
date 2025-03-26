@@ -13,19 +13,19 @@ namespace CrazyPawn.Implementation
         
         #region Private Fields
 
-        private Material ValidStateMaterial;
+        private Material _validStateMaterial;
         
-        private Material InvalidStateMaterial;
+        private Material _invalidStateMaterial;
 
         #endregion
 
         #region Injected Fields
 
-        [Inject] private CrazyPawnsImplSettings ImplementationSettings;
+        [Inject] private CrazyPawnsImplSettings _implementationSettings;
         
-        [Inject] private IAssetProvider AssetProvider;
+        [Inject] private IAssetProvider _assetProvider;
 
-        [Inject] private SignalBus SignalBus;
+        [Inject] private SignalBus _signalBus;
 
         #endregion
         
@@ -40,10 +40,10 @@ namespace CrazyPawn.Implementation
         public PawnState State { get; private set; } = PawnState.Valid;
 
         private Material MaterialValid =>
-            CommonUtils.GetCached(ref ValidStateMaterial, () => AssetProvider.ProvideAssetByKey<Material>(ImplementationSettings.PawnMaterialValidKey));
+            CommonUtils.GetCached(ref _validStateMaterial, () => _assetProvider.ProvideAssetByKey<Material>(_implementationSettings.PawnMaterialValidKey));
 
         private Material MaterialInvalid =>
-            CommonUtils.GetCached(ref InvalidStateMaterial, () => AssetProvider.ProvideAssetByKey<Material>(ImplementationSettings.PawnMaterialInvalidKey));
+            CommonUtils.GetCached(ref _invalidStateMaterial, () => _assetProvider.ProvideAssetByKey<Material>(_implementationSettings.PawnMaterialInvalidKey));
 
         public Material CurrentMaterial => State == PawnState.Valid ? MaterialValid : MaterialInvalid;
         

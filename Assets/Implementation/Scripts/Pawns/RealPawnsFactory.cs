@@ -4,24 +4,24 @@ namespace CrazyPawn.Implementation {
 
         #region Private Fields
 
-        private Pawn PawnPrefabObject;
+        private Pawn _pawnPrefabObject;
 
-        private DiContainer Container;
+        private DiContainer _container;
 
         #endregion
         
         #region Injected Fields
 
-        [Inject] private CrazyPawnsImplSettings ImplementationSettings;
+        [Inject] private CrazyPawnsImplSettings _implementationSettings;
         
-        [Inject] private IAssetProvider AssetProvider;
+        [Inject] private IAssetProvider _assetProvider;
         
         #endregion
 
         #region Accessors
 
         private Pawn PawnPrefab =>
-            CommonUtils.GetCached(ref PawnPrefabObject, () => AssetProvider.ProvideAssetByKey<Pawn>(ImplementationSettings.PawnPrefabResourceKey));
+            CommonUtils.GetCached(ref _pawnPrefabObject, () => _assetProvider.ProvideAssetByKey<Pawn>(_implementationSettings.PawnPrefabResourceKey));
 
         #endregion
 
@@ -29,7 +29,7 @@ namespace CrazyPawn.Implementation {
 
         public RealPawnsFactory(DiContainer container) 
         {
-            Container = container;
+            _container = container;
         }
 
         #endregion
@@ -38,7 +38,7 @@ namespace CrazyPawn.Implementation {
 
         public Pawn Create() 
         {
-            return Container.InstantiatePrefabForComponent<Pawn>(PawnPrefab);
+            return _container.InstantiatePrefabForComponent<Pawn>(PawnPrefab);
         }
 
         #endregion

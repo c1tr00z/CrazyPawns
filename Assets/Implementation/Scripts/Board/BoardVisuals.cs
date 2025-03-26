@@ -8,13 +8,13 @@ namespace CrazyPawn.Implementation
 
         #region Private Fields
 
-        private Material BoardMaterial;
+        private Material _boardMaterial;
 
-        private MeshRenderer BoardMesh;
+        private MeshRenderer _boardMesh;
 
-        private SignalBus SignalBus;
+        private SignalBus _signalBus;
 
-        private bool BoardBuilt = false;
+        private bool _boardBuilt = false;
 
         #endregion
         
@@ -32,9 +32,9 @@ namespace CrazyPawn.Implementation
 
         #region Accessors
 
-        private MeshRenderer CheckerboardMesh => CommonUtils.GetCached(ref BoardMesh, GetComponent<MeshRenderer>);
+        private MeshRenderer CheckerboardMesh => CommonUtils.GetCached(ref _boardMesh, GetComponent<MeshRenderer>);
 
-        private Material CheckerboardMaterial => CommonUtils.GetCached(ref BoardMaterial, () => {
+        private Material CheckerboardMaterial => CommonUtils.GetCached(ref _boardMaterial, () => {
             var newMaterial = Instantiate(CheckerboardMesh.sharedMaterial);
             CheckerboardMesh.sharedMaterial = newMaterial;
             return newMaterial;
@@ -51,12 +51,12 @@ namespace CrazyPawn.Implementation
 
         private void OnEnable()
         {
-            SignalBus.Subscribe<StateChangedSignal>(OnStateChanged);
+            _signalBus.Subscribe<IStateChangedSignal>(OnStateChanged);
         }
 
         private void OnDisable()
         {
-            SignalBus.Unsubscribe<StateChangedSignal>(OnStateChanged);
+            _signalBus.Unsubscribe<IStateChangedSignal>(OnStateChanged);
         }
 
         #endregion
@@ -66,14 +66,14 @@ namespace CrazyPawn.Implementation
         [Inject]
         public void Construct(SignalBus signalBus)
         {
-            SignalBus = signalBus;
+            _signalBus = signalBus;
         }
 
         #endregion
 
         #region Class Implementation
 
-        private void OnStateChanged(StateChangedSignal stateChanged)
+        private void OnStateChanged(IStateChangedSignal stateChanged)
         {
             TryToSetupBoard(stateChanged.State);
         }
@@ -89,7 +89,7 @@ namespace CrazyPawn.Implementation
         }
 
         private void SetupCheckerboard() {
-            if (BoardBuilt) 
+            if (_boardBuilt) 
             {
                 return;
             }
@@ -100,7 +100,7 @@ namespace CrazyPawn.Implementation
             CheckerboardMaterial.SetColor(ImplementationSettings.CheckerboardColorBParamName, CrazyPawnSettings.BlackCellColor);
             CheckerboardMaterial.SetFloat(ImplementationSettings.CheckerboardSizeParamName, CrazyPawnSettings.CheckerboardSize);
             
-            BoardBuilt = true;
+            _boardBuilt = true;
             
             StateCompleter.CompleteState(State.BoardInit);
         }

@@ -9,13 +9,13 @@ namespace CrazyPawn.Implementation
 
         #region Private Fields
 
-        private Dictionary<string, Object> LoadedAssets = new();
+        private Dictionary<string, Object> _loadedAssets = new();
 
         #endregion
         
         #region Injected Fields
 
-        [Inject] private CrazyPawnsResourcesSettings ResourcesSettings;
+        [Inject] private CrazyPawnsResourcesSettings _resourcesSettings;
 
         #endregion
 
@@ -23,11 +23,11 @@ namespace CrazyPawn.Implementation
 
         public T ProvideAssetByKey<T>(string key) where T : Object 
         {
-            if (LoadedAssets.TryGetValue(key, out var asset)) {
+            if (_loadedAssets.TryGetValue(key, out var asset)) {
                 return asset as T;
             }
             var newlyLoaded = LoadAsset<T>(key);
-            LoadedAssets.Add(key, newlyLoaded);
+            _loadedAssets.Add(key, newlyLoaded);
             return newlyLoaded;
         }
 
@@ -37,7 +37,7 @@ namespace CrazyPawn.Implementation
 
         private T LoadAsset<T>(string key) where T : Object 
         {
-            var assetData = ResourcesSettings.AssetsData.FirstOrDefault(d => d.Key == key);
+            var assetData = _resourcesSettings.AssetsData.FirstOrDefault(d => d.Key == key);
             if (!assetData.IsValid()) 
             {
                 throw new UnityException($"Asset data for key {key} is not exist or invalid");
