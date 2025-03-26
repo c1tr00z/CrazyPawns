@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 namespace CrazyPawn.Implementation 
@@ -18,8 +17,6 @@ namespace CrazyPawn.Implementation
         
         private Material InvalidStateMaterial;
 
-        private SignalBus SignalBus;
-
         #endregion
 
         #region Injected Fields
@@ -27,6 +24,8 @@ namespace CrazyPawn.Implementation
         [Inject] private CrazyPawnsImplSettings ImplementationSettings;
         
         [Inject] private IAssetProvider AssetProvider;
+
+        [Inject] private SignalBus SignalBus;
 
         #endregion
         
@@ -48,16 +47,6 @@ namespace CrazyPawn.Implementation
 
         public Material CurrentMaterial => State == PawnState.Valid ? MaterialValid : MaterialInvalid;
         
-        #endregion
-
-        #region Zenject Events
-
-        [Inject]
-        public void Construct(SignalBus signalBus) 
-        {
-            SignalBus = signalBus;
-        }
-
         #endregion
 
         #region Class Implementation

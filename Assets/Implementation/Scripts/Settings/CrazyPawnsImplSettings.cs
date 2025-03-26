@@ -14,6 +14,8 @@ namespace CrazyPawn.Implementation {
         [SerializeField] public float CheckerboardScaleCoeff = 1;
 
         [SerializeField] public string PawnPrefabResourceKey;
+
+        [SerializeField] public string ConnectionPrefabResourceKey;
         
         [SerializeField] public string PawnMaterialValidKey;
         
@@ -21,6 +23,10 @@ namespace CrazyPawn.Implementation {
         
         [SerializeField] public string ConnectorMaterialActiveKey;
         
+        [SerializeField] [Range(0f, 1f)] public float ConnectionLineThickness;
+
+        [SerializeField] public Color ConnectionLineColor;
+
         #endregion
     }
 }

@@ -1,7 +1,5 @@
-using UnityEngine;
 using Zenject;
 namespace CrazyPawn.Implementation {
-    
     public class RealPawnsFactory : IFactory<Pawn> {
 
         #region Private Fields
@@ -38,7 +36,8 @@ namespace CrazyPawn.Implementation {
         
         #region IFactory Implementation
 
-        public Pawn Create() {
+        public Pawn Create() 
+        {
             return Container.InstantiatePrefabForComponent<Pawn>(PawnPrefab);
         }
 

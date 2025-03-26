@@ -18,6 +18,9 @@ MonoBehaviour:
   CheckerboardSquareSize: 1.5
   CheckerboardScaleCoeff: 0.1
   PawnPrefabResourceKey: Pawn
+  ConnectionPrefabResourceKey: ConnectionLine
   PawnMaterialValidKey: MaterialPawnValid
   PawnMaterialInvalidKey: MaterialPawnInvalid
   ConnectorMaterialActiveKey: MaterialConnecterAvaiiable
+  ConnectionLineThickness: 1
+  ConnectionLineColor: {r: 1, g: 1, b: 1, a: 1}

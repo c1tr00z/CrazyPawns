@@ -1,3 +1,5 @@
+using CrazyPawn.Implementation.Connections;
+using Implementation.Scripts.Pawns.Connections;
 using Zenject;
 namespace CrazyPawn.Implementation 
 {
@@ -16,6 +18,8 @@ namespace CrazyPawn.Implementation
             Container.Bind(typeof(IPawnCreator), typeof(IPawnPooler)).To<PawnsManager>().AsSingle().NonLazy();
             Container.BindFactory<Pawn, PawnFactory>().FromFactory<RealPawnsFactory>();
             Container.Bind(typeof(IStateCompleter), typeof(IStateProvider)).To<StateManager>().AsSingle();
+            Container.Bind<IConnectionPooler>().To<ConnectionsManager>().AsSingle().NonLazy();
+            Container.BindFactory<Connection, ConnectionFactory>().FromFactory<RealConnectionFactory>();
         }
 
         #endregion

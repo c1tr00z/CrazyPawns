@@ -14,8 +14,6 @@ namespace CrazyPawn.Implementation
 
         private Pawn ActivePawn;
 
-        private PawnConnector ActiveConnector;
-
         private Vector2 BoardMinCoord;
         
         private Vector2 BoardMaxCoord;
@@ -108,8 +106,7 @@ namespace CrazyPawn.Implementation
                     if (connector is null) {
                         return;
                     }
-                    ActiveConnector = connector;
-                    SignalBus.Fire(PawnConnectorActivate.MakeNew(ActiveConnector));
+                    SignalBus.Fire(PawnConnectorActivate.MakeNew(connector));
                 }
             }
         }
@@ -134,13 +131,14 @@ namespace CrazyPawn.Implementation
             {
                 PawnPooler.ReturnToPool(ActivePawn);
             }
-            SignalBus.Fire(new PawnConnectorDeactivate());
-            if (ActiveConnector is not null) 
-            {
-                
+
+            var ray = Camera.ScreenPointToRay(newPosition);
+            PawnConnector connector = null;
+            if (Physics.Raycast(ray, out RaycastHit hitInfo, 100, LayerMask.GetMask("Connectors"))) {
+                connector = hitInfo.transform.GetComponent<PawnConnector>();
             }
+            SignalBus.Fire(PawnConnectorDeactivate.MakeNew(connector));
             ActivePawn = null;
-            ActiveConnector = null;
         }
 
         private bool IsPointInsideBoard(Vector3 point) 
