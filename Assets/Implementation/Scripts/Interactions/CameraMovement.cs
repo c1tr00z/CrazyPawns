@@ -1,8 +1,10 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using Zenject;
 namespace CrazyPawn.Implementation 
 {
+    [RequireComponent(typeof(CameraRaycaster))]
     public class CameraMovement : MonoBehaviour 
     {
         #region Private Fields
@@ -11,9 +13,19 @@ namespace CrazyPawn.Implementation
 
         private Vector3 _moveStartPosition;
 
+        private Vector3 _zoomMoveTargetPosition;
+
         private float _screenResolutionCoefficient = 1;
 
         private bool _dragStarted;
+
+        private bool _zoomInStarted;
+
+        private float _timeToTravel;
+
+        private float _zoomForce;
+
+        private CameraRaycaster _cameraRaycaster;
 
         #endregion
         
@@ -26,6 +38,18 @@ namespace CrazyPawn.Implementation
         #region Serialized Fields
 
         [SerializeField] private float _moveSpeed = 1f;
+        
+        [SerializeField] private float _zoomSpeed = 1f;
+        
+        [SerializeField] private float _zoomMaxSpeed = 1f;
+        
+        [SerializeField] private float _zoomSpeedDecreaseSpeed = 1f;
+
+        #endregion
+
+        #region Accessors
+
+        private CameraRaycaster CameraRaycaster => this.GetCachedComponent(ref _cameraRaycaster);
 
         #endregion
 
@@ -33,6 +57,7 @@ namespace CrazyPawn.Implementation
 
         private void OnEnable()
         {
+            CrazyPawnsInput.Zoom += InputOnZoom;
             _signalBus.Subscribe<ISimpleDragStartedSignal>(OnSimpleDragStarted);
             _signalBus.Subscribe<ISimpleDragSignal>(OnSimpleDrag);
             _signalBus.Subscribe<ISimpleDragFinishedSignal>(OnSimpleDragFinished);
@@ -40,6 +65,7 @@ namespace CrazyPawn.Implementation
 
         private void OnDisable() 
         {
+            CrazyPawnsInput.Zoom -= InputOnZoom;
             _signalBus.Unsubscribe<ISimpleDragStartedSignal>(OnSimpleDragStarted);
             _signalBus.Unsubscribe<ISimpleDragSignal>(OnSimpleDrag);
             _signalBus.Unsubscribe<ISimpleDragFinishedSignal>(OnSimpleDragFinished);
@@ -52,6 +78,8 @@ namespace CrazyPawn.Implementation
         private void OnSimpleDragStarted(ISimpleDragStartedSignal signal) 
         {
             CalculateScreenCoefficient();
+            StopCoroutine(nameof(C_ZoomMove));
+            _zoomInStarted = false;
             
             _dragStartedPosition = signal.MousePosition;
             _moveStartPosition = transform.position;
@@ -77,6 +105,55 @@ namespace CrazyPawn.Implementation
         private void CalculateScreenCoefficient() 
         {
             _screenResolutionCoefficient = 1080f / Screen.height;
+        }
+
+        private void InputOnZoom(Vector2 mousePosition, float zoomDelta) 
+        {
+            // Не учитываем зум пока камера двигается по драгу
+            if (_dragStarted) 
+            {
+                return;
+            }
+            if (CameraRaycaster.PlaneCast(mousePosition, out var point, out var distance)) 
+            {
+                if (Mathf.Approximately(zoomDelta, 0)) 
+                {
+                    return;
+                }
+                _moveStartPosition = transform.position;
+                _zoomMoveTargetPosition = point;//new Vector3(point.x, transform.position.y, point.z);
+                if (!_zoomInStarted) 
+                {
+                    _zoomInStarted = true;
+                    StartCoroutine(nameof(C_ZoomMove));
+                }
+                
+                var sign = Mathf.Sign(zoomDelta);
+                if (!Mathf.Approximately(sign, Mathf.Sign(_zoomForce))) 
+                {
+                    _zoomForce = sign > 0 ? Mathf.Min(_zoomMaxSpeed, _zoomForce + _zoomSpeed) : Mathf.Max(-1 * _zoomMaxSpeed, _zoomForce + -1 * _zoomSpeed);
+                } 
+                else 
+                {
+                    _zoomForce = _zoomSpeed * sign;
+                }
+                
+                // transform.position = Vector3.Lerp();
+            }
+        }
+
+        private IEnumerator C_ZoomMove() 
+        {
+            while ((transform.position - _zoomMoveTargetPosition).magnitude > 0.1f && !Mathf.Approximately(_zoomForce, 0)) 
+            {
+                // Debug.LogError($"{_zoomForce} ________ {(transform.position - _zoomMoveTargetPosition).magnitude}");
+                var direction = (_zoomMoveTargetPosition - transform.position).normalized;
+                transform.position += _zoomForce * Time.deltaTime * direction;
+                _zoomForce += Mathf.Sign(_zoomForce) * -1 * _zoomSpeedDecreaseSpeed * Time.deltaTime;
+                yield return null;
+            }
+
+            _zoomInStarted = false;
         }
         
         #endregion

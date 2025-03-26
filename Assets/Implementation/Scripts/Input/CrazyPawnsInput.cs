@@ -10,6 +10,7 @@ namespace CrazyPawn.Implementation
         public static event Action<Vector2> DragStarted;
         public static event Action<Vector2> Drag;
         public static event Action<Vector2> DragFinished;
+        public static event Action<Vector2, float> Zoom;
         
         #region Private Fields
 
@@ -80,6 +81,11 @@ namespace CrazyPawn.Implementation
                 }
                 DragFinished?.Invoke(CurrentMousePosition);
             }
+        }
+
+        public void OnZoom(InputAction.CallbackContext context) 
+        {
+            Zoom?.Invoke(CurrentMousePosition, context.ReadValue<float>());
         }
 
         #endregion
