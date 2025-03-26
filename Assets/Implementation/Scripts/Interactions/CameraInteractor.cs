@@ -5,7 +5,6 @@ namespace CrazyPawn.Implementation
 {
     public class CameraInteractor : MonoBehaviour 
     {
-
         #region Private Fields
 
         private SignalBus SignalBus;
@@ -14,9 +13,13 @@ namespace CrazyPawn.Implementation
 
         private Pawn ActivePawn;
 
+        private PawnConnector ActiveConnector;
+
         private Vector2 BoardMinCoord;
         
         private Vector2 BoardMaxCoord;
+
+        private PawnProviderSignal _pawnDraggedSignal;
 
         #endregion
 
@@ -33,6 +36,8 @@ namespace CrazyPawn.Implementation
         #region Accessors
 
         private Camera Camera => CommonUtils.GetCached(ref CameraObject, GetComponent<Camera>);
+
+        private PawnProviderSignal PawnProviderSignal => CommonUtils.GetCached(ref _pawnDraggedSignal, () => new PawnProviderSignal());
 
         #endregion
         
@@ -84,7 +89,29 @@ namespace CrazyPawn.Implementation
 
         private void InputOnTap(Vector2 newPosition) 
         {
-            throw new NotImplementedException();
+            var ray = Camera.ScreenPointToRay(newPosition);
+            if (Physics.Raycast(ray, out RaycastHit hitInfo, 100, LayerMask.GetMask("Connectors"))) {
+                if (hitInfo.transform.gameObject.layer == LayerMask.NameToLayer("Connectors")) 
+                {
+                    var connector = hitInfo.transform.GetComponent<PawnConnector>();
+                    if (connector is null) {
+                        return;
+                    }
+                    if (ActiveConnector is null) 
+                    {
+                        ActiveConnector = connector;
+                        SignalBus.Fire(PawnConnectorActivate.MakeNew(connector));
+                    } 
+                    else 
+                    {
+                        SignalBus.Fire(PawnConnectorDeactivate.MakeNew(connector));
+                        ActiveConnector = null;
+                    }
+                }
+            } else {
+                SignalBus.Fire(PawnConnectorDeactivate.MakeNew(null));
+                ActiveConnector = null;
+            }
         }
 
         private void InputOnDragStarted(Vector2 newPosition) 
@@ -106,6 +133,7 @@ namespace CrazyPawn.Implementation
                     if (connector is null) {
                         return;
                     }
+                    ActiveConnector = connector;
                     SignalBus.Fire(PawnConnectorActivate.MakeNew(connector));
                 }
             }
@@ -122,6 +150,11 @@ namespace CrazyPawn.Implementation
                 var point = ray.GetPoint(distance);
                 ActivePawn.transform.position = point;
                 ActivePawn.SetState(IsPointInsideBoard(point) ? PawnState.Valid : PawnState.Invalid);
+                if (PawnProviderSignal.Pawn != ActivePawn) 
+                {
+                    PawnProviderSignal.UpdatePawn(ActivePawn);
+                }
+                SignalBus.Fire<IPawnDraggedSignal>(PawnProviderSignal);
             }
         }
 
@@ -138,6 +171,7 @@ namespace CrazyPawn.Implementation
                 connector = hitInfo.transform.GetComponent<PawnConnector>();
             }
             SignalBus.Fire(PawnConnectorDeactivate.MakeNew(connector));
+            ActiveConnector = null;
             ActivePawn = null;
         }
 

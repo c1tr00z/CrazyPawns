@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Implementation.Scripts.Pawns.Connections;
+using System.Linq;
 using UnityEngine;
 using Zenject;
-namespace CrazyPawn.Implementation.Connections 
+namespace CrazyPawn.Implementation  
 {
     public class ConnectionsManager : IConnectionPooler
     {
@@ -44,6 +44,8 @@ namespace CrazyPawn.Implementation.Connections
             SignalBus = signalBus;
             SignalBus.Subscribe<PawnConnectorActivate>(OnConnectorActivate);
             SignalBus.Subscribe<PawnConnectorDeactivate>(OnConnectorDeactivate);
+            SignalBus.Subscribe<IPawnDraggedSignal>(OnPawnDragged);
+            SignalBus.Subscribe<IPawnRemovedSignal>(OnPawnRemoved);
         }
 
         #endregion
@@ -54,6 +56,8 @@ namespace CrazyPawn.Implementation.Connections
         {
             SignalBus.Unsubscribe<PawnConnectorActivate>(OnConnectorActivate);
             SignalBus.Unsubscribe<PawnConnectorDeactivate>(OnConnectorDeactivate);
+            SignalBus.Unsubscribe<IPawnDraggedSignal>(OnPawnDragged);
+            SignalBus.Unsubscribe<IPawnRemovedSignal>(OnPawnRemoved);
         }
 
         #endregion
@@ -62,6 +66,14 @@ namespace CrazyPawn.Implementation.Connections
 
         public void ReturnToPool(Connection connection) 
         {
+            if (connection is null) 
+            {
+                return;
+            }
+            if (ActiveConnections.Contains(connection)) 
+            {
+                ActiveConnections.Remove(connection);
+            }
             if (Cached.Contains(connection)) 
             {
                 return;
@@ -76,22 +88,37 @@ namespace CrazyPawn.Implementation.Connections
 
         private void OnConnectorActivate(PawnConnectorActivate signal) 
         {
-            StartConnector = signal.Connector;
+            if (StartConnector is null) 
+            {
+                StartConnector = signal.Connector;
+            } 
+            else 
+            {
+                var endConnector = signal.Connector;
+                Create(StartConnector, endConnector);
+                StartConnector = null;
+            }
         }
         
         private void OnConnectorDeactivate(PawnConnectorDeactivate signal) 
         {
             var endConnector = signal.Connector;
-            if (StartConnector is not null && endConnector is not null) 
-            {
-                Create(StartConnector, endConnector);
-            }
+            
+            Create(StartConnector, endConnector);
             
             StartConnector = null;
         }
 
         private void Create(PawnConnector start, PawnConnector end) 
         {
+            if (start is null || end is null) 
+            {
+                return;
+            }
+            if (start.Parent == end.Parent) 
+            {
+                return;
+            }
             Connection connection;
             if (Cached.Count > 0) 
             {
@@ -102,7 +129,23 @@ namespace CrazyPawn.Implementation.Connections
             {
                 connection = ConnectionFactory.Create();
             }
-            connection.SetPoints(new List<Transform> { start.transform, end.transform });
+            if (!ActiveConnections.Contains(connection)) 
+            {
+                ActiveConnections.Add(connection);
+            }
+            connection.SetPoints(new List<PawnConnector> { start, end });
+        }
+
+        private void OnPawnDragged(IPawnDraggedSignal signal) 
+        {
+            var toChanged = ActiveConnections.Where(c => c.Points.Any(p => p.Parent == signal.Pawn)).ToList();
+            toChanged.ForEach(c => c.GenerateLineMesh());
+        }
+
+        private void OnPawnRemoved(IPawnRemovedSignal signal) 
+        {
+            var toPool = ActiveConnections.Where(c => c.Points.Any(p => p.Parent == signal.Pawn)).ToList();
+            toPool.ForEach(ReturnToPool);
         }
 
         #endregion

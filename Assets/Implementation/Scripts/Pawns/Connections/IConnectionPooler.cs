@@ -1,5 +1,4 @@
-using CrazyPawn.Implementation;
-namespace Implementation.Scripts.Pawns.Connections 
+namespace CrazyPawn.Implementation 
 {
     public interface IConnectionPooler 
     {

@@ -17,7 +17,7 @@ namespace CrazyPawn.Implementation
         
         private Mesh _mesh;
     
-        private List<Transform> _points;
+        private List<PawnConnector> _points;
 
         private Material _lineMaterial;
 
@@ -47,11 +47,13 @@ namespace CrazyPawn.Implementation
                 return material;
             });
 
+        public IEnumerable<PawnConnector> Points => _points;
+
         #endregion
 
         #region Class Implementation
 
-        public void SetPoints(List<Transform> newPoints)
+        public void SetPoints(List<PawnConnector> newPoints)
         {
             _points = newPoints;
             GenerateLineMesh();
@@ -69,7 +71,7 @@ namespace CrazyPawn.Implementation
         
             for (int i = 0; i < _points.Count; i++)
             {
-                vertices[i] = _points[i].position;
+                vertices[i] = _points[i].transform.position;
                 indices[i] = i;
             }
         

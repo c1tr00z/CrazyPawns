@@ -12,6 +12,8 @@ namespace CrazyPawn.Implementation {
         
         private Transform Pool;
 
+        private PawnProviderSignal _pawnRemovedSignal;
+
         #endregion
         
         #region Injected Fields
@@ -19,6 +21,12 @@ namespace CrazyPawn.Implementation {
         [Inject] private CrazyPawnSettings CrazyPawnSettings;
 
         [Inject] private PawnFactory PawnFactory;
+
+        #endregion
+
+        #region Accessors
+
+        private PawnProviderSignal PawnRemovedSignal => CommonUtils.GetCached(ref _pawnRemovedSignal, () => new PawnProviderSignal());
 
         #endregion
         
@@ -29,6 +37,7 @@ namespace CrazyPawn.Implementation {
         {
             SignalBus = signalBus;
             SignalBus.Subscribe<StateChangedSignal>(OnStateChanged);
+            SignalBus.Subscribe<IPawnRemovedSignal>(OnPawnRemoved);
         }
 
         #endregion
@@ -38,6 +47,7 @@ namespace CrazyPawn.Implementation {
         ~PawnsManager()
         {
             SignalBus.Unsubscribe<StateChangedSignal>(OnStateChanged);
+            SignalBus.Unsubscribe<IPawnRemovedSignal>(OnPawnRemoved);
         }
 
         #endregion
@@ -56,6 +66,7 @@ namespace CrazyPawn.Implementation {
             {
                 pawn = PawnFactory.Create();
             }
+            pawn.SetState(PawnState.Valid);
             PlacePawn(pawn);
             return pawn;
         }
@@ -66,6 +77,10 @@ namespace CrazyPawn.Implementation {
 
         public void ReturnToPool(Pawn pawn)
         {
+            if (pawn is null) 
+            {
+                return;
+            }
             if (Pool is null) 
             {
                 Pool = new GameObject("PawnsPool").transform;
@@ -78,6 +93,12 @@ namespace CrazyPawn.Implementation {
             
             Cached.Enqueue(pawn);
             pawn.transform.parent = Pool;
+            
+            if (PawnRemovedSignal.Pawn != pawn) 
+            {
+                PawnRemovedSignal.UpdatePawn(pawn);
+            }
+            SignalBus.Fire<IPawnRemovedSignal>(PawnRemovedSignal);
         }
 
         #endregion
@@ -111,6 +132,11 @@ namespace CrazyPawn.Implementation {
                 radius * Mathf.Sin(angle * Mathf.Deg2Rad)
             );
             pawn.transform.position = point;
+        }
+
+        private void OnPawnRemoved(IPawnRemovedSignal signal) 
+        {
+            ReturnToPool(signal.Pawn);
         }
 
         #endregion

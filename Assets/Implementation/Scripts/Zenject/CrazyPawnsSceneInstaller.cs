@@ -1,4 +1,3 @@
-using CrazyPawn.Implementation.Connections;
 using Implementation.Scripts.Pawns.Connections;
 using Zenject;
 namespace CrazyPawn.Implementation 
@@ -13,6 +12,8 @@ namespace CrazyPawn.Implementation
             Container.DeclareSignal<StateChangedSignal>().OptionalSubscriber();
             Container.DeclareSignal<PawnConnectorActivate>().OptionalSubscriber();
             Container.DeclareSignal<PawnConnectorDeactivate>().OptionalSubscriber();
+            Container.DeclareSignal<IPawnDraggedSignal>().OptionalSubscriber();
+            Container.DeclareSignal<IPawnRemovedSignal>().OptionalSubscriber();
             Container.Bind<IInitializable>().To<SceneStarter>().AsSingle();
             Container.Bind<IAssetProvider>().To<AssetManager>().AsSingle();
             Container.Bind(typeof(IPawnCreator), typeof(IPawnPooler)).To<PawnsManager>().AsSingle().NonLazy();
