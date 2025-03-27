@@ -19,12 +19,6 @@ namespace CrazyPawn.Implementation {
         
         [SerializeField] public string MouseConnectionPrefabResourceKey;
         
-        [SerializeField] public string PawnMaterialValidKey;
-        
-        [SerializeField] public string PawnMaterialInvalidKey;
-        
-        [SerializeField] public string ConnectorMaterialActiveKey;
-        
         [SerializeField] [Range(0f, 1f)] public float ConnectionLineThickness;
 
         [SerializeField] public Color ConnectionLineColor;

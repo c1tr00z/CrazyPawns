@@ -25,12 +25,15 @@ namespace CrazyPawn.Implementation
         
         #endregion
 
+        #region Serialized Fields
+
+        [SerializeField] private Material _materialConnectorActive;
+
+        #endregion
+
         #region Accessors
 
         public Pawn Parent => CommonUtils.GetCached(ref _parentPawn, GetComponentInParent<Pawn>);
-        
-        private Material MaterialConnectorActive => CommonUtils.GetCached(ref _connectorActiveMaterial,
-            () => _assetProvider.ProvideAssetByKey<Material>(_implementationSettings.ConnectorMaterialActiveKey));
 
         private MeshRenderer MeshRenderer => this.GetCachedComponent(ref _connectorRenderer);
 
@@ -68,7 +71,7 @@ namespace CrazyPawn.Implementation
                 return;
             }
 
-            MeshRenderer.sharedMaterial = MaterialConnectorActive;
+            MeshRenderer.sharedMaterial = _materialConnectorActive;
         }
 
         private void OnConnectorDeactivate(IPawnConnectorDeactivate signal) 
