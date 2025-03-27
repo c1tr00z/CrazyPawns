@@ -141,6 +141,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 734f1d90bfa94055a8620e39efe10427, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &271863776
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 271863768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6f1a90967e1488f866afa9274e3dba8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _moveSpeed: 0.025
+  _zoomSpeed: 3
+  _zoomMaxSpeed: 6
+  _zoomSpeedDecreaseSpeed: 5
+--- !u!114 &271863777
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 271863768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9d43a9b794a4c98bfc0597ce01df6c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -602,6 +630,22 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: a3f6a69b-599d-474f-a1b2-740e36fe1479
     m_ActionName: UI/TrackedDeviceOrientation
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1877029388}
+        m_TargetAssemblyTypeName: CrazyPawn.Implementation.CrazyPawnsInput, CrazyPawnsIgor
+        m_MethodName: OnZoom
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 41249267-523a-4769-9fed-db79ebd95dbd
+    m_ActionName: Player/Zoom[/Mouse/scroll/y]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -704,7 +748,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4420021947619040812, guid: 368457728b5d74561b805d9bb789017e,
         type: 3}
       insertIndex: -1
+      addedObject: {fileID: 271863777}
+    - targetCorrespondingSourceObject: {fileID: 4420021947619040812, guid: 368457728b5d74561b805d9bb789017e,
+        type: 3}
+      insertIndex: -1
       addedObject: {fileID: 271863772}
+    - targetCorrespondingSourceObject: {fileID: 4420021947619040812, guid: 368457728b5d74561b805d9bb789017e,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 271863776}
   m_SourcePrefab: {fileID: 100100000, guid: 368457728b5d74561b805d9bb789017e, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

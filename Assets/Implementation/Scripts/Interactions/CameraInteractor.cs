@@ -2,14 +2,14 @@ using UnityEngine;
 using Zenject;
 namespace CrazyPawn.Implementation 
 {
-    [RequireComponent(typeof(Camera))]
+    [RequireComponent(typeof(CameraRaycaster))]
     public class CameraInteractor : MonoBehaviour 
     {
         #region Private Fields
 
         private SignalBus _signalBus;
 
-        private Camera _cameraObject;
+        private CameraRaycaster _cameraRaycaster;
 
         private Pawn _activePawn;
 
@@ -22,6 +22,8 @@ namespace CrazyPawn.Implementation
         private PawnProviderSignal _pawnDraggedSignal;
 
         private ConnectorProviderSignal _connectorProviderSignal;
+
+        private SimpleDragSignal _simpleDragSignal;
 
         #endregion
 
@@ -37,11 +39,13 @@ namespace CrazyPawn.Implementation
 
         #region Accessors
 
-        private Camera Camera => this.GetCachedComponent(ref _cameraObject);
+        private CameraRaycaster CameraRaycaster => this.GetCachedComponent(ref _cameraRaycaster);
 
         private PawnProviderSignal PawnProviderSignal => CommonUtils.GetCached(ref _pawnDraggedSignal, () => new PawnProviderSignal());
 
         private ConnectorProviderSignal ConnectorProviderSignal => CommonUtils.GetCached(ref _connectorProviderSignal, () => new ConnectorProviderSignal());
+
+        private SimpleDragSignal SimpleDragSignal => CommonUtils.GetCached(ref _simpleDragSignal, () => new SimpleDragSignal());
 
         #endregion
         
@@ -93,11 +97,11 @@ namespace CrazyPawn.Implementation
 
         private void InputOnTap(Vector2 newPosition) 
         {
-            var ray = Camera.ScreenPointToRay(newPosition);
-            if (Physics.Raycast(ray, out RaycastHit hitInfo, 100, LayerMask.GetMask("Connectors"))) {
-                if (hitInfo.transform.gameObject.layer == LayerMask.NameToLayer("Connectors")) 
+            if (CameraRaycaster.Raycast(newPosition, LayerMask.GetMask("Connectors"), out Transform hitTransform)) 
+            {
+                if (hitTransform.gameObject.layer == LayerMask.NameToLayer("Connectors")) 
                 {
-                    var connector = hitInfo.transform.GetComponent<PawnConnector>();
+                    var connector = hitTransform.GetComponent<PawnConnector>();
                     if (connector is null) {
                         return;
                     }
@@ -112,7 +116,7 @@ namespace CrazyPawn.Implementation
                         _activeConnector = null;
                     }
                 }
-            }
+            } 
             else 
             {
                 FireConnectorDeactivateSignal(null);
@@ -122,20 +126,20 @@ namespace CrazyPawn.Implementation
 
         private void InputOnDragStarted(Vector2 newPosition) 
         {
-            var ray = Camera.ScreenPointToRay(newPosition);
-            if (Physics.Raycast(ray, out RaycastHit hitInfo, 100, LayerMask.GetMask("Connectors", "Pawn"))) {
-                if (hitInfo.transform.gameObject.layer == LayerMask.NameToLayer("Pawn")) 
+            if (CameraRaycaster.Raycast(newPosition, LayerMask.GetMask("Connectors", "Pawn"), out Transform hitTransform)) 
+            {
+                if (hitTransform.gameObject.layer == LayerMask.NameToLayer("Pawn")) 
                 {
-                    var pawn = hitInfo.transform.GetComponentInParent<Pawn>();
+                    var pawn = hitTransform.GetComponentInParent<Pawn>();
                     if (pawn is null) {
                         return;
                     }
                     _activePawn = pawn;
                     return;
                 }
-                if (hitInfo.transform.gameObject.layer == LayerMask.NameToLayer("Connectors")) 
+                if (hitTransform.gameObject.layer == LayerMask.NameToLayer("Connectors")) 
                 {
-                    var connector = hitInfo.transform.GetComponent<PawnConnector>();
+                    var connector = hitTransform.GetComponent<PawnConnector>();
                     if (connector is null) {
                         return;
                     }
@@ -143,17 +147,25 @@ namespace CrazyPawn.Implementation
                     FireConnectorActivateSignal(connector);
                 }
             }
+            else 
+            {
+                SimpleDragSignal.UpdateMousePosition(newPosition);
+                _signalBus.Fire<ISimpleDragStartedSignal>(SimpleDragSignal);
+            }
         }
 
         private void CrazyPawnsInputOnDrag(Vector2 newPosition) {
-            if (_activePawn is null) {
+            if (_activePawn is null)
+            {
+                if (_activeConnector is null) 
+                {
+                    SimpleDragSignal.UpdateMousePosition(newPosition);
+                    _signalBus.Fire<ISimpleDragSignal>(SimpleDragSignal);
+                }
                 return;
             }
-            var ray = Camera.ScreenPointToRay(newPosition);
-            var plane = new Plane(Vector3.up, Vector3.zero);
-            if (plane.Raycast(ray, out float distance))
+            if (CameraRaycaster.PlaneCast(newPosition, out Vector3 point, out float distance)) 
             {
-                var point = ray.GetPoint(distance);
                 _activePawn.transform.position = point;
                 _activePawn.SetState(IsPointInsideBoard(point) ? PawnState.Valid : PawnState.Invalid);
                 if (PawnProviderSignal.Pawn != _activePawn) 
@@ -166,15 +178,21 @@ namespace CrazyPawn.Implementation
 
         private void InputOnDragFinished(Vector2 newPosition) 
         {
+            if (_activePawn is null && _activeConnector is null) 
+            {
+                SimpleDragSignal.UpdateMousePosition(newPosition);
+                _signalBus.Fire<ISimpleDragFinishedSignal>(SimpleDragSignal);
+                return;
+            }
             if (_activePawn is not null && !IsPointInsideBoard(_activePawn.transform.position))
             {
                 _pawnPooler.ReturnToPool(_activePawn);
             }
 
-            var ray = Camera.ScreenPointToRay(newPosition);
             PawnConnector connector = null;
-            if (Physics.Raycast(ray, out RaycastHit hitInfo, 100, LayerMask.GetMask("Connectors"))) {
-                connector = hitInfo.transform.GetComponent<PawnConnector>();
+            if (CameraRaycaster.Raycast(newPosition, LayerMask.GetMask("Connectors"), out var hitTransform)) 
+            {
+                connector = hitTransform.GetComponent<PawnConnector>();
             }
             FireConnectorDeactivateSignal(connector);
             _activeConnector = null;
