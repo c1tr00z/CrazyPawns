@@ -1,6 +1,9 @@
 using UnityEngine;
 namespace CrazyPawn.Implementation 
 {
+    /// <summary>
+    /// Компонент для рейкастов и плейнкастов через камеру
+    /// </summary>
     [RequireComponent(typeof(Camera))]
     public class CameraRaycaster : MonoBehaviour 
     {

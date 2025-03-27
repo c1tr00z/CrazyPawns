@@ -2,6 +2,9 @@ using UnityEngine;
 using Zenject;
 namespace CrazyPawn.Implementation 
 {
+    /// <summary>
+    /// Основной класс для интеракции с пешками и коннекторами
+    /// </summary>
     [RequireComponent(typeof(CameraRaycaster))]
     public class CameraInteractor : MonoBehaviour 
     {
