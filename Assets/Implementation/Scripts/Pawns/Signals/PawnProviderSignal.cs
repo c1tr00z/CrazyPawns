@@ -1,6 +1,6 @@
 namespace CrazyPawn.Implementation 
 {
-    public class PawnProviderSignal : IPawnDraggedSignal, IPawnRemovedSignal
+    public class PawnProviderSignal : IPawnDragStartedSignal, IPawnDraggedSignal, IPawnDragFinishedSignal, IPawnRemovedSignal
     {
         
         #region IPawnDraggedSignal Implementation

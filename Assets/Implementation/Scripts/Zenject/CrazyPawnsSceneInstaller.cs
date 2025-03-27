@@ -12,7 +12,9 @@ namespace CrazyPawn.Implementation
             Container.DeclareSignal<IStateChangedSignal>().OptionalSubscriber();
             Container.DeclareSignal<IPawnConnectorActivate>().OptionalSubscriber();
             Container.DeclareSignal<IPawnConnectorDeactivate>().OptionalSubscriber();
+            Container.DeclareSignal<IPawnDragStartedSignal>().OptionalSubscriber();
             Container.DeclareSignal<IPawnDraggedSignal>().OptionalSubscriber();
+            Container.DeclareSignal<IPawnDragFinishedSignal>().OptionalSubscriber();
             Container.DeclareSignal<IPawnRemovedSignal>().OptionalSubscriber();
             Container.DeclareSignal<ISimpleDragStartedSignal>().OptionalSubscriber();
             Container.DeclareSignal<ISimpleDragSignal>().OptionalSubscriber();

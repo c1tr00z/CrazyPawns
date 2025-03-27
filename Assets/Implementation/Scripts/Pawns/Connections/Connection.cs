@@ -15,8 +15,8 @@ namespace CrazyPawn.Implementation
         private MeshRenderer _renderer;
         
         private Mesh _mesh;
-    
-        private List<PawnConnector> _points;
+
+        private List<PawnConnector> _points = new();
 
         private Material _lineMaterial;
 
@@ -52,9 +52,10 @@ namespace CrazyPawn.Implementation
 
         #region Class Implementation
 
-        public void SetPoints(List<PawnConnector> newPoints)
+        public void SetPoints(IEnumerable<PawnConnector> newPoints)
         {
-            _points = newPoints;
+            _points.Clear();
+            _points.AddRange(newPoints);
             GenerateLineMesh();
         }
     
@@ -62,7 +63,15 @@ namespace CrazyPawn.Implementation
         {
             if (_points.Count < 2)
             {
+                gameObject.SetActive(false);
                 return;
+            }
+            
+            Mesh.Clear();
+
+            if (!gameObject.activeSelf) 
+            {
+                gameObject.SetActive(true);
             }
         
             Vector3[] vertices = new Vector3[_points.Count];
@@ -73,7 +82,7 @@ namespace CrazyPawn.Implementation
                 vertices[i] = _points[i].transform.position;
                 indices[i] = i;
             }
-        
+            
             Mesh.vertices = vertices;
             Mesh.SetIndices(indices, MeshTopology.Lines, 0);
         

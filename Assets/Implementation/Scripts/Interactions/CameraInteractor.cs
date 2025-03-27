@@ -135,6 +135,13 @@ namespace CrazyPawn.Implementation
                         return;
                     }
                     _activePawn = pawn;
+                    
+                    if (PawnProviderSignal.Pawn != _activePawn) 
+                    {
+                        PawnProviderSignal.UpdatePawn(_activePawn);
+                    }
+                    _signalBus.Fire<IPawnDragStartedSignal>(PawnProviderSignal);
+                    
                     return;
                 }
                 if (hitTransform.gameObject.layer == LayerMask.NameToLayer("Connectors")) 
@@ -184,9 +191,18 @@ namespace CrazyPawn.Implementation
                 _signalBus.Fire<ISimpleDragFinishedSignal>(SimpleDragSignal);
                 return;
             }
-            if (_activePawn is not null && !IsPointInsideBoard(_activePawn.transform.position))
+            if (_activePawn is not null)
             {
-                _pawnPooler.ReturnToPool(_activePawn);
+                if (PawnProviderSignal.Pawn != _activePawn) 
+                {
+                    PawnProviderSignal.UpdatePawn(_activePawn);
+                }
+                _signalBus.Fire<IPawnDragFinishedSignal>(PawnProviderSignal);
+                
+                if (!IsPointInsideBoard(_activePawn.transform.position)) 
+                {
+                    _pawnPooler.ReturnToPool(_activePawn);
+                }
             }
 
             PawnConnector connector = null;
