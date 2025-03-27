@@ -3,11 +3,11 @@ using UnityEngine;
 using Zenject;
 namespace CrazyPawn.Implementation 
 {
-    public class Pawn : MonoBehaviour 
+    public class Pawn : MonoBehaviour, IConnectorParent
     {
         #region Events
 
-        public event Action StateChanged;
+        private PawnStateChangedSignal _stateChangedSignal;
 
         #endregion
 
@@ -33,6 +33,8 @@ namespace CrazyPawn.Implementation
 
         #region Accessors
 
+        private PawnStateChangedSignal StateChangedSignal => CommonUtils.GetCached(ref _stateChangedSignal, () => new PawnStateChangedSignal(this));
+
         public PawnState State { get; private set; } = PawnState.Valid;
 
         public Material CurrentMaterial => State == PawnState.Valid ? _materialValid : _materialInvalid;
@@ -49,7 +51,7 @@ namespace CrazyPawn.Implementation
             }
             State = newState;
             Body.sharedMaterial = CurrentMaterial;
-            StateChanged?.Invoke();
+            _signalBus.Fire(StateChangedSignal);
         }
 
         #endregion

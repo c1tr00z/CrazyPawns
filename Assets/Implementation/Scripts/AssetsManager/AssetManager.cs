@@ -4,6 +4,7 @@ using UnityEngine;
 using Zenject;
 namespace CrazyPawn.Implementation 
 {
+    // Реализовал управленеи ассетами через синхронную загрузку из ресурсов искобчительно для демонстрационных целей и в целях скорости имплементации. В продакшене так не надо
     public class AssetManager : IAssetProvider
     {
 
