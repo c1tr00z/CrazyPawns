@@ -5,6 +5,8 @@ namespace CrazyPawn.Implementation
         #region Methods
 
         public Pawn Create();
+        
+        public void CreatePawns();
 
         #endregion
     }
