@@ -15,12 +15,6 @@ namespace CrazyPawn.Implementation
         
         #region Private Fields
 
-        private readonly float _holdThreshold = 0.25f;
-
-        private readonly float _dragThreshold = 1f;
-
-        private readonly float _mouseMovementThreshold = 1;
-
         private float _mouseDownTime;
 
         private bool _isPressed;
@@ -30,6 +24,12 @@ namespace CrazyPawn.Implementation
         private Vector2 _mouseDownPosition;
 
         private Vector2 _prevMousePosition;
+
+        #endregion
+
+        #region Injected Fields
+
+        [Inject] private CrazyPawnsImplSettings _implementationSettings;
 
         #endregion
 
@@ -44,7 +44,7 @@ namespace CrazyPawn.Implementation
         private void LateUpdate() 
         {
             var currentMousePosition = CurrentMousePosition;
-            if ((currentMousePosition - _prevMousePosition).magnitude > _mouseMovementThreshold) 
+            if ((currentMousePosition - _prevMousePosition).magnitude > _implementationSettings.MouseMovementThreshold) 
             {
                 _prevMousePosition = currentMousePosition;
                 MouseMove?.Invoke(currentMousePosition);
@@ -53,7 +53,7 @@ namespace CrazyPawn.Implementation
             {
                 return;    
             }
-            if ((currentMousePosition - _mouseDownPosition).magnitude < _dragThreshold) 
+            if ((currentMousePosition - _mouseDownPosition).magnitude < _implementationSettings.DragThreshold) 
             {
                 return;
             }
@@ -85,7 +85,7 @@ namespace CrazyPawn.Implementation
             else 
             {
                 _holdStarted = false;
-                if (Time.time - _mouseDownTime < _holdThreshold)
+                if (Time.time - _mouseDownTime < _implementationSettings.HoldThreshold)
                 {
                     Tap?.Invoke(CurrentMousePosition);
                     return;

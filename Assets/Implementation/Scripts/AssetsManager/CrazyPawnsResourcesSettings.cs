@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Zenject;
 namespace CrazyPawn.Implementation {
+    /// <summary>
+    /// Вручную созданный список из resource ссылок и ключей для использования в других местах
+    /// </summary>
     public class CrazyPawnsResourcesSettings : ScriptableObject {
 
         #region Nested Classes

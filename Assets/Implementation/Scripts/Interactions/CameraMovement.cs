@@ -4,6 +4,9 @@ using UnityEngine;
 using Zenject;
 namespace CrazyPawn.Implementation 
 {
+    /// <summary>
+    /// Класс для управления камерой в пространстве
+    /// </summary>
     [RequireComponent(typeof(CameraRaycaster))]
     public class CameraMovement : MonoBehaviour 
     {
