@@ -7,7 +7,7 @@ namespace CrazyPawn.Implementation
     {
         #region Private Fields
 
-        private Pawn _parentPawn;
+        private IConnectorParent _parentPawn;
         
         private Material _connectorActiveMaterial;
 
@@ -25,12 +25,15 @@ namespace CrazyPawn.Implementation
         
         #endregion
 
+        #region Serialized Fields
+
+        [SerializeField] private Material _materialConnectorActive;
+
+        #endregion
+
         #region Accessors
 
-        public Pawn Parent => CommonUtils.GetCached(ref _parentPawn, GetComponentInParent<Pawn>);
-        
-        private Material MaterialConnectorActive => CommonUtils.GetCached(ref _connectorActiveMaterial,
-            () => _assetProvider.ProvideAssetByKey<Material>(_implementationSettings.ConnectorMaterialActiveKey));
+        public IConnectorParent Parent => CommonUtils.GetCached(ref _parentPawn, GetComponentInParent<IConnectorParent>);
 
         private MeshRenderer MeshRenderer => this.GetCachedComponent(ref _connectorRenderer);
 
@@ -40,14 +43,14 @@ namespace CrazyPawn.Implementation
 
         private void OnEnable() 
         {
-            Parent.StateChanged += OnParentStateChanged;
+            _signalBus.Subscribe<PawnStateChangedSignal>(OnParentStateChanged);
             _signalBus.Subscribe<IPawnConnectorActivate>(OnConnectorActivate);
             _signalBus.Subscribe<IPawnConnectorDeactivate>(OnConnectorDeactivate);
         }
 
         private void OnDisable() 
         {
-            Parent.StateChanged -= OnParentStateChanged;
+            _signalBus.Unsubscribe<PawnStateChangedSignal>(OnParentStateChanged);
             _signalBus.Unsubscribe<IPawnConnectorActivate>(OnConnectorActivate);
             _signalBus.Unsubscribe<IPawnConnectorDeactivate>(OnConnectorDeactivate);
         }
@@ -56,8 +59,12 @@ namespace CrazyPawn.Implementation
 
         #region Class Implementation
         
-        private void OnParentStateChanged() 
+        private void OnParentStateChanged(PawnStateChangedSignal signal) 
         {
+            if (signal.StateProvider is not IConnectorParent otherParent || Parent != otherParent) 
+            {
+                return;
+            }
             MeshRenderer.sharedMaterial = Parent.CurrentMaterial;
         }
 
@@ -68,7 +75,7 @@ namespace CrazyPawn.Implementation
                 return;
             }
 
-            MeshRenderer.sharedMaterial = MaterialConnectorActive;
+            MeshRenderer.sharedMaterial = _materialConnectorActive;
         }
 
         private void OnConnectorDeactivate(IPawnConnectorDeactivate signal) 

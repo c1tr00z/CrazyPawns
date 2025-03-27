@@ -6,6 +6,8 @@ namespace CrazyPawn.Implementation
 
         public void ReturnToPool(Pawn pawn);
 
+        public void ReturnAllToPool();
+
         #endregion
     }
 }

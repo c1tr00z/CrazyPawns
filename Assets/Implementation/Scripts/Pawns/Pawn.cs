@@ -3,19 +3,11 @@ using UnityEngine;
 using Zenject;
 namespace CrazyPawn.Implementation 
 {
-    public class Pawn : MonoBehaviour 
+    public class Pawn : MonoBehaviour, IConnectorParent
     {
         #region Events
 
-        public event Action StateChanged;
-
-        #endregion
-        
-        #region Private Fields
-
-        private Material _validStateMaterial;
-        
-        private Material _invalidStateMaterial;
+        private PawnStateChangedSignal _stateChangedSignal;
 
         #endregion
 
@@ -31,21 +23,21 @@ namespace CrazyPawn.Implementation
         
         #region Serialized Fields
 
+        [SerializeField] private Material _materialValid;
+        
+        [SerializeField] private Material _materialInvalid;
+
         [SerializeField] private MeshRenderer Body;
 
         #endregion
 
         #region Accessors
 
+        private PawnStateChangedSignal StateChangedSignal => CommonUtils.GetCached(ref _stateChangedSignal, () => new PawnStateChangedSignal(this));
+
         public PawnState State { get; private set; } = PawnState.Valid;
 
-        private Material MaterialValid =>
-            CommonUtils.GetCached(ref _validStateMaterial, () => _assetProvider.ProvideAssetByKey<Material>(_implementationSettings.PawnMaterialValidKey));
-
-        private Material MaterialInvalid =>
-            CommonUtils.GetCached(ref _invalidStateMaterial, () => _assetProvider.ProvideAssetByKey<Material>(_implementationSettings.PawnMaterialInvalidKey));
-
-        public Material CurrentMaterial => State == PawnState.Valid ? MaterialValid : MaterialInvalid;
+        public Material CurrentMaterial => State == PawnState.Valid ? _materialValid : _materialInvalid;
         
         #endregion
 
@@ -59,7 +51,7 @@ namespace CrazyPawn.Implementation
             }
             State = newState;
             Body.sharedMaterial = CurrentMaterial;
-            StateChanged?.Invoke();
+            _signalBus.Fire(StateChangedSignal);
         }
 
         #endregion

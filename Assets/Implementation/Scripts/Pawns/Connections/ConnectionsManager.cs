@@ -12,17 +12,33 @@ namespace CrazyPawn.Implementation
 
         private PawnConnector _startConnector;
 
-        private List<Connection> _activeConnections = new();
+        private PawnConnection _staticPawnConnections;
+        
+        private PawnConnection _dynamicPawnConnections;
 
-        private Queue<Connection> _cached = new();
+        private MouseConnection _mouseConnection;
+
+        private Queue<PawnConnection> _cached = new();
 
         private Transform _poolParent;
 
+        private List<PawnConnector[]> _connectionsData = new();
+        
+        private List<PawnConnector[]> _staticData = new();
+        
+        private List<PawnConnector[]> _dynamicData = new();
+
+        private PawnConnection _pawnConnectionPrefab;
+
+        private MouseConnection _mouseConnectionPrefab;
+        
         #endregion
 
         #region Injected Fields
 
-        [Inject] private ConnectionFactory ConnectionFactory;
+        [Inject] private IAssetProvider _assetProvider;
+
+        [Inject] private CrazyPawnsImplSettings _implementationSettings;
 
         #endregion
 
@@ -34,6 +50,33 @@ namespace CrazyPawn.Implementation
             return newPool;
         });
 
+        private PawnConnection PawnConnectionPrefab => CommonUtils.GetCached(ref _pawnConnectionPrefab,
+            () => _assetProvider.ProvideAssetByKey<PawnConnection>(_implementationSettings.PawnConnectionPrefabResourceKey));
+        
+        private MouseConnection MouseConnectionPrefab => CommonUtils.GetCached(ref _mouseConnectionPrefab,
+            () => _assetProvider.ProvideAssetByKey<MouseConnection>(_implementationSettings.MouseConnectionPrefabResourceKey));
+
+        private PawnConnection StaticPawnConnections => CommonUtils.GetCached(ref _staticPawnConnections, () => {
+            var newConnection = Object.Instantiate(PawnConnectionPrefab);
+            newConnection.gameObject.name = "StaticConnections";
+            newConnection.Init(_implementationSettings);
+            return newConnection;
+        });
+        
+        private PawnConnection DynamicPawnConnections => CommonUtils.GetCached(ref _dynamicPawnConnections, () => {
+            var newConnection = Object.Instantiate(PawnConnectionPrefab);
+            newConnection.gameObject.name = "DynamicConnections";
+            newConnection.Init(_implementationSettings);
+            return newConnection;
+        });
+
+        private MouseConnection MouseConnection => CommonUtils.GetCached(ref _mouseConnection, () => {
+            var newConnection = Object.Instantiate(MouseConnectionPrefab);
+            newConnection.gameObject.name = "MouseConnection";
+            newConnection.Init(_implementationSettings);
+            return newConnection;
+        });
+
         #endregion
         
         #region Constructors
@@ -42,9 +85,18 @@ namespace CrazyPawn.Implementation
         public ConnectionsManager(SignalBus signalBus) 
         {
             _signalBus = signalBus;
+            
             _signalBus.Subscribe<IPawnConnectorActivate>(OnConnectorActivate);
             _signalBus.Subscribe<IPawnConnectorDeactivate>(OnConnectorDeactivate);
+            
+            _signalBus.Subscribe<IPawnDragStartedSignal>(OnPawnDragStarted);
             _signalBus.Subscribe<IPawnDraggedSignal>(OnPawnDragged);
+            _signalBus.Subscribe<IPawnDragFinishedSignal>(OnPawnDragFinished);
+            
+            _signalBus.Subscribe<IConnectionStartedSignal>(OnConnectionStarted);
+            _signalBus.Subscribe<IConnectionDragSignal>(OnConnectionDrag);
+            _signalBus.Subscribe<IConnectionFinishedSignal>(OnConnectionFinished);
+            
             _signalBus.Subscribe<IPawnRemovedSignal>(OnPawnRemoved);
         }
 
@@ -56,7 +108,15 @@ namespace CrazyPawn.Implementation
         {
             _signalBus.Unsubscribe<IPawnConnectorActivate>(OnConnectorActivate);
             _signalBus.Unsubscribe<IPawnConnectorDeactivate>(OnConnectorDeactivate);
+            
+            _signalBus.Unsubscribe<IPawnDragStartedSignal>(OnPawnDragStarted);
             _signalBus.Unsubscribe<IPawnDraggedSignal>(OnPawnDragged);
+            _signalBus.Unsubscribe<IPawnDragFinishedSignal>(OnPawnDragFinished);
+            
+            _signalBus.Unsubscribe<IConnectionStartedSignal>(OnConnectionStarted);
+            _signalBus.Unsubscribe<IConnectionDragSignal>(OnConnectionDrag);
+            _signalBus.Unsubscribe<IConnectionFinishedSignal>(OnConnectionFinished);
+            
             _signalBus.Unsubscribe<IPawnRemovedSignal>(OnPawnRemoved);
         }
 
@@ -64,22 +124,18 @@ namespace CrazyPawn.Implementation
 
         #region IConnectionPooler Implementation
 
-        public void ReturnToPool(Connection connection) 
+        public void ReturnToPool(PawnConnection pawnConnection) 
         {
-            if (connection is null) 
+            if (pawnConnection is null) 
             {
                 return;
             }
-            if (_activeConnections.Contains(connection)) 
-            {
-                _activeConnections.Remove(connection);
-            }
-            if (_cached.Contains(connection)) 
+            if (_cached.Contains(pawnConnection)) 
             {
                 return;
             }
-            _cached.Enqueue(connection);
-            connection.transform.parent = Pool;
+            _cached.Enqueue(pawnConnection);
+            pawnConnection.transform.parent = Pool;
         }
 
         #endregion
@@ -119,33 +175,77 @@ namespace CrazyPawn.Implementation
             {
                 return;
             }
-            Connection connection;
-            if (_cached.Count > 0) 
-            {
-                connection = _cached.Dequeue();
-                connection.transform.parent = null;
-            } 
-            else 
-            {
-                connection = ConnectionFactory.Create();
-            }
-            if (!_activeConnections.Contains(connection)) 
-            {
-                _activeConnections.Add(connection);
-            }
-            connection.SetPoints(new List<PawnConnector> { start, end });
+
+            _connectionsData.Add(new []{ start, end });
+            _staticData.Clear();
+            _staticData.AddRange(_connectionsData);
+
+            RegenerateConnections();
+        }
+
+        private void RegenerateConnections() 
+        {
+            StaticPawnConnections.SetPoints(_staticData.SelectMany(d => d).Select(c => c.transform));
+            DynamicPawnConnections.SetPoints(_dynamicData.SelectMany(d => d).Select(c => c.transform));
+        }
+
+        private void OnPawnDragStarted(IPawnDragStartedSignal signal) 
+        {
+            var allPoints = _connectionsData.SelectMany(d => d);
+            var pointsToMove = allPoints.Where(p => p.Parent == signal.Pawn).ToList();
+            
+            _dynamicData.Clear();
+            _dynamicData.AddRange(_connectionsData.Where(d => d.Any(c => pointsToMove.Contains(c))));
+            _staticData.Clear();
+            _staticData.AddRange(_connectionsData.Where(d => !_dynamicData.Contains(d)));
+
+            RegenerateConnections();
         }
 
         private void OnPawnDragged(IPawnDraggedSignal signal) 
         {
-            var toChanged = _activeConnections.Where(c => c.Points.Any(p => p.Parent == signal.Pawn)).ToList();
-            toChanged.ForEach(c => c.GenerateLineMesh());
+            DynamicPawnConnections.GenerateLineMesh();
+        }
+
+        private void OnPawnDragFinished(IPawnDragFinishedSignal signal) 
+        {
+            _dynamicData.Clear();
+            _staticData.Clear();
+            _staticData.AddRange(_connectionsData);
+            
+            RegenerateConnections();
         }
 
         private void OnPawnRemoved(IPawnRemovedSignal signal) 
         {
-            var toPool = _activeConnections.Where(c => c.Points.Any(p => p.Parent == signal.Pawn)).ToList();
-            toPool.ForEach(ReturnToPool);
+            var dataToRemove = _connectionsData.Where(d => d.Any(c => c.Parent == signal.Pawn));
+            _connectionsData.RemoveAll(d => dataToRemove.Contains(d));
+            
+            _dynamicData.Clear();
+            _staticData.Clear();
+            _staticData.AddRange(_connectionsData);
+            
+            RegenerateConnections();
+        }
+
+        private void OnConnectionStarted(IConnectionStartedSignal signal) 
+        {
+            MouseConnection.gameObject.SetActive(true);
+            MouseConnection.SetConnector(signal.Connector);
+            MouseConnection.UpdateMouse3DPosition(signal.Mouse3dPosition);
+            MouseConnection.GenerateLineMesh();
+        }
+        
+        private void OnConnectionDrag(IConnectionDragSignal signal) 
+        {
+            MouseConnection.SetConnector(signal.Connector);
+            MouseConnection.UpdateMouse3DPosition(signal.Mouse3dPosition);
+            MouseConnection.GenerateLineMesh();
+        }
+        
+        private void OnConnectionFinished(IConnectionFinishedSignal signal) 
+        {
+            MouseConnection.gameObject.SetActive(false);
         }
 
         #endregion

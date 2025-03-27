@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Zenject;
 namespace CrazyPawn.Implementation {
@@ -13,6 +14,8 @@ namespace CrazyPawn.Implementation {
         private Transform _pool;
 
         private PawnProviderSignal _pawnRemovedSignal;
+
+        private List<Pawn> _activePawns = new();
 
         #endregion
         
@@ -68,6 +71,10 @@ namespace CrazyPawn.Implementation {
             }
             pawn.SetState(PawnState.Valid);
             PlacePawn(pawn);
+            if (!_activePawns.Contains(pawn)) 
+            {
+                _activePawns.Add(pawn);
+            }
             return pawn;
         }
 
@@ -86,6 +93,10 @@ namespace CrazyPawn.Implementation {
                 _pool = new GameObject("PawnsPool").transform;
                 _pool.gameObject.SetActive(false);
             }
+            if (_activePawns.Contains(pawn)) 
+            {
+                _activePawns.Remove(pawn);
+            }
             if (_cached.Contains(pawn))
             {
                 return;
@@ -101,21 +112,27 @@ namespace CrazyPawn.Implementation {
             _signalBus.Fire<IPawnRemovedSignal>(PawnRemovedSignal);
         }
 
+        public void ReturnAllToPool() 
+        {
+            var pawns = _activePawns.ToList();
+            pawns.ForEach(ReturnToPool);
+        }
+
         #endregion
 
         #region Class Implementation
 
-        private void OnStateChanged(IStateChangedSignal stateChanged) 
+        private void OnStateChanged(IStateChangedSignal signal) 
         {
-            if (stateChanged.State != State.PawnsInit)
+            if (signal.State != State.PawnsInit)
             {
                 return;
             }
             
-            SpawnPawns();
+            CreatePawns();
         }
         
-        private void SpawnPawns() 
+        public void CreatePawns() 
         {
             for (int i = 0; i < _crazyPawnSettings.InitialPawnCount; i++) 
             {

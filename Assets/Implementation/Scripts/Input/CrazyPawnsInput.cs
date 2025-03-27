@@ -11,12 +11,15 @@ namespace CrazyPawn.Implementation
         public static event Action<Vector2> Drag;
         public static event Action<Vector2> DragFinished;
         public static event Action<Vector2, float> Zoom;
+        public static event Action<Vector2> MouseMove; 
         
         #region Private Fields
 
         private readonly float _holdThreshold = 0.25f;
 
         private readonly float _dragThreshold = 1f;
+
+        private readonly float _mouseMovementThreshold = 1;
 
         private float _mouseDownTime;
 
@@ -25,6 +28,8 @@ namespace CrazyPawn.Implementation
         private bool _holdStarted;
 
         private Vector2 _mouseDownPosition;
+
+        private Vector2 _prevMousePosition;
 
         #endregion
 
@@ -38,18 +43,24 @@ namespace CrazyPawn.Implementation
 
         private void LateUpdate() 
         {
+            var currentMousePosition = CurrentMousePosition;
+            if ((currentMousePosition - _prevMousePosition).magnitude > _mouseMovementThreshold) 
+            {
+                _prevMousePosition = currentMousePosition;
+                MouseMove?.Invoke(currentMousePosition);
+            }
             if (!_isPressed) 
             {
                 return;    
             }
-            if ((CurrentMousePosition - _mouseDownPosition).magnitude < _dragThreshold) 
+            if ((currentMousePosition - _mouseDownPosition).magnitude < _dragThreshold) 
             {
                 return;
             }
             if (!_holdStarted) 
             {
                 _holdStarted = true;
-                DragStarted?.Invoke(CurrentMousePosition);
+                DragStarted?.Invoke(currentMousePosition);
             }
             Drag?.Invoke(Mouse.current.position.value);
         }

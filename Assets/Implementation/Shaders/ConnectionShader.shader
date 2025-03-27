@@ -8,7 +8,7 @@ Shader "Custom/ConnectionShader"
     
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags { "RenderType"="Unlit" }
         LOD 100
         
         Pass

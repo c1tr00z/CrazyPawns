@@ -15,12 +15,7 @@ MonoBehaviour:
   AssetsData:
   - Key: Pawn
     ResourcePath: PawnImpl
-  - Key: MaterialPawnValid
-    ResourcePath: BaseMaterial
-  - Key: MaterialPawnInvalid
-    ResourcePath: DeleteMaterial
-  - Key: MaterialConnecterAvaiiable
-    ResourcePath: ActiveConnectorMaterial
-  - Key: ConnectionLine
-    ResourcePath: Connection
-  PawnPath: PawnImpl
+  - Key: PawnConnectionLine
+    ResourcePath: PawnConnection
+  - Key: MouseConnectionLine
+    ResourcePath: MouseConnection
