@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Zenject;
 namespace CrazyPawn.Implementation 
 {
     [RequireComponent(typeof(MeshRenderer))]
@@ -20,12 +19,8 @@ namespace CrazyPawn.Implementation
 
         private Material _lineMaterial;
 
-        #endregion
+        private CrazyPawnsImplSettings _implementationSettings;
         
-        #region Injected Fields
-
-        [Inject] private CrazyPawnsImplSettings ImplementationSettings;
-
         #endregion
 
         #region Accessors
@@ -51,6 +46,11 @@ namespace CrazyPawn.Implementation
         #endregion
 
         #region Class Implementation
+
+        public void Init(CrazyPawnsImplSettings implementationSettings) 
+        {
+            _implementationSettings = implementationSettings;
+        }
 
         public void SetPoints(IEnumerable<PawnConnector> newPoints)
         {
@@ -86,8 +86,8 @@ namespace CrazyPawn.Implementation
             Mesh.vertices = vertices;
             Mesh.SetIndices(indices, MeshTopology.Lines, 0);
         
-            LineMaterial.SetColor("_Color", ImplementationSettings.ConnectionLineColor);
-            LineMaterial.SetFloat("_Thickness", ImplementationSettings.ConnectionLineThickness);
+            LineMaterial.SetColor("_Color", _implementationSettings.ConnectionLineColor);
+            LineMaterial.SetFloat("_Thickness", _implementationSettings.ConnectionLineThickness);
         }
 
         #endregion

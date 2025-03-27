@@ -25,12 +25,16 @@ namespace CrazyPawn.Implementation
         private List<PawnConnector[]> _staticData = new();
         
         private List<PawnConnector[]> _dynamicData = new();
+
+        private Connection _connectionPrefab;
         
         #endregion
 
         #region Injected Fields
 
-        [Inject] private ConnectionFactory _connectionFactory;
+        [Inject] private IAssetProvider _assetProvider;
+
+        [Inject] private CrazyPawnsImplSettings _implementationSettings;
 
         #endregion
 
@@ -42,15 +46,20 @@ namespace CrazyPawn.Implementation
             return newPool;
         });
 
+        private Connection ConnectionPrefab => CommonUtils.GetCached(ref _connectionPrefab,
+            () => _assetProvider.ProvideAssetByKey<Connection>(_implementationSettings.ConnectionPrefabResourceKey));
+
         private Connection StaticConnections => CommonUtils.GetCached(ref _staticConnections, () => {
-            var newConnection = _connectionFactory.Create();
-            newConnection.gameObject.name = "StaticConnection";
+            var newConnection = Object.Instantiate(ConnectionPrefab);
+            newConnection.gameObject.name = "StaticConnections";
+            newConnection.Init(_implementationSettings);
             return newConnection;
         });
         
         private Connection DynamicConnections => CommonUtils.GetCached(ref _dynamicConnections, () => {
-            var newConnection = _connectionFactory.Create();
-            newConnection.gameObject.name = "DynamicConnection";
+            var newConnection = Object.Instantiate(ConnectionPrefab);
+            newConnection.gameObject.name = "DynamicConnections";
+            newConnection.Init(_implementationSettings);
             return newConnection;
         });
 

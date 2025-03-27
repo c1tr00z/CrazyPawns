@@ -26,7 +26,6 @@ namespace CrazyPawn.Implementation
             Container.BindFactory<Pawn, PawnFactory>().FromFactory<RealPawnsFactory>();
             Container.Bind(typeof(IStateCompleter), typeof(IStateProvider)).To<StateManager>().AsSingle();
             Container.Bind<IConnectionPooler>().To<ConnectionsManager>().AsSingle().NonLazy();
-            Container.BindFactory<Connection, ConnectionFactory>().FromFactory<RealConnectionFactory>();
         }
 
         #endregion
