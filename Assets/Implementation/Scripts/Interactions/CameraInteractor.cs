@@ -25,6 +25,8 @@ namespace CrazyPawn.Implementation
 
         private SimpleDragSignal _simpleDragSignal;
 
+        private ConnectionDragSignal _connectionDragSignal;
+
         #endregion
 
         #region Injected Fields
@@ -47,6 +49,8 @@ namespace CrazyPawn.Implementation
 
         private SimpleDragSignal SimpleDragSignal => CommonUtils.GetCached(ref _simpleDragSignal, () => new SimpleDragSignal());
 
+        private ConnectionDragSignal ConnectionDragSignal => CommonUtils.GetCached(ref _connectionDragSignal, () => new ConnectionDragSignal());
+
         #endregion
         
         #region Unity Events
@@ -57,6 +61,7 @@ namespace CrazyPawn.Implementation
             CrazyPawnsInput.DragStarted += InputOnDragStarted;
             CrazyPawnsInput.Drag += CrazyPawnsInputOnDrag;
             CrazyPawnsInput.DragFinished += InputOnDragFinished;
+            CrazyPawnsInput.MouseMove += InputOnMouseMove;
         }
 
         private void OnDisable() 
@@ -65,6 +70,7 @@ namespace CrazyPawn.Implementation
             CrazyPawnsInput.DragStarted -= InputOnDragStarted;
             CrazyPawnsInput.Drag -= CrazyPawnsInputOnDrag;
             CrazyPawnsInput.DragFinished -= InputOnDragFinished;
+            CrazyPawnsInput.MouseMove -= InputOnMouseMove;
         }
 
         private void Start() 
@@ -97,7 +103,7 @@ namespace CrazyPawn.Implementation
 
         private void InputOnTap(Vector2 newPosition) 
         {
-            if (CameraRaycaster.Raycast(newPosition, LayerMask.GetMask("Connectors"), out Transform hitTransform)) 
+            if (CameraRaycaster.Raycast(newPosition, LayerMask.GetMask("Connectors"), out Transform hitTransform, out var point)) 
             {
                 if (hitTransform.gameObject.layer == LayerMask.NameToLayer("Connectors")) 
                 {
@@ -109,9 +115,19 @@ namespace CrazyPawn.Implementation
                     {
                         _activeConnector = connector;
                         FireConnectorActivateSignal(connector);
+                        
+                        ConnectionDragSignal.UpdateConnector(_activeConnector);
+                        ConnectionDragSignal.UpdateMouse3dPosition(point);
+                        _signalBus.Fire<IConnectionStartedSignal>(ConnectionDragSignal);
                     } 
                     else 
                     {
+                        if (_activeConnector is not null) 
+                        {
+                            ConnectionDragSignal.UpdateConnector(_activeConnector);
+                            ConnectionDragSignal.UpdateMouse3dPosition(point);
+                            _signalBus.Fire<IConnectionFinishedSignal>(ConnectionDragSignal);
+                        }
                         FireConnectorDeactivateSignal(connector);
                         _activeConnector = null;
                     }
@@ -126,7 +142,7 @@ namespace CrazyPawn.Implementation
 
         private void InputOnDragStarted(Vector2 newPosition) 
         {
-            if (CameraRaycaster.Raycast(newPosition, LayerMask.GetMask("Connectors", "Pawn"), out Transform hitTransform)) 
+            if (CameraRaycaster.Raycast(newPosition, LayerMask.GetMask("Connectors", "Pawn"), out Transform hitTransform, out var point)) 
             {
                 if (hitTransform.gameObject.layer == LayerMask.NameToLayer("Pawn")) 
                 {
@@ -152,6 +168,10 @@ namespace CrazyPawn.Implementation
                     }
                     _activeConnector = connector;
                     FireConnectorActivateSignal(connector);
+                    
+                    ConnectionDragSignal.UpdateConnector(_activeConnector);
+                    ConnectionDragSignal.UpdateMouse3dPosition(point);
+                    _signalBus.Fire<IConnectionStartedSignal>(ConnectionDragSignal);
                 }
             }
             else 
@@ -162,6 +182,17 @@ namespace CrazyPawn.Implementation
         }
 
         private void CrazyPawnsInputOnDrag(Vector2 newPosition) {
+            if (_activeConnector is not null && CameraRaycaster.PlaneCast(newPosition, _activeConnector.transform.position.y, out var mouse3dPosition))
+            {
+                if (ConnectionDragSignal.Connector != _activeConnector) 
+                {
+                    ConnectionDragSignal.UpdateConnector(_activeConnector);
+                }
+                ConnectionDragSignal.UpdateMouse3dPosition(mouse3dPosition);
+                _signalBus.Fire<IConnectionDragSignal>(ConnectionDragSignal);
+                return;
+            }
+            
             if (_activePawn is null)
             {
                 if (_activeConnector is null) 
@@ -171,7 +202,7 @@ namespace CrazyPawn.Implementation
                 }
                 return;
             }
-            if (CameraRaycaster.PlaneCast(newPosition, out Vector3 point, out float distance)) 
+            if (CameraRaycaster.PlaneCast(newPosition, out Vector3 point)) 
             {
                 _activePawn.transform.position = point;
                 _activePawn.SetState(IsPointInsideBoard(point) ? PawnState.Valid : PawnState.Invalid);
@@ -205,14 +236,36 @@ namespace CrazyPawn.Implementation
                 }
             }
 
+            _signalBus.Fire<IConnectionFinishedSignal>(ConnectionDragSignal);
+            
             PawnConnector connector = null;
-            if (CameraRaycaster.Raycast(newPosition, LayerMask.GetMask("Connectors"), out var hitTransform)) 
+            if (CameraRaycaster.Raycast(newPosition, LayerMask.GetMask("Connectors"), out var hitTransform, out var point)) 
             {
                 connector = hitTransform.GetComponent<PawnConnector>();
             }
             FireConnectorDeactivateSignal(connector);
             _activeConnector = null;
             _activePawn = null;
+        }
+
+        private void InputOnMouseMove(Vector2 mousePosition) 
+        {
+            if (_activeConnector is null) 
+            {
+                return;
+            }
+
+            if (CameraRaycaster.PlaneCast(mousePosition, _activeConnector.transform.position.y, out var point)) 
+            {
+                if (ConnectionDragSignal.Connector != _activeConnector) 
+                {
+                    ConnectionDragSignal.UpdateConnector(_activeConnector);
+                }
+                
+                ConnectionDragSignal.UpdateMouse3dPosition(point);
+                
+                _signalBus.Fire<IConnectionDragSignal>(ConnectionDragSignal);
+            }
         }
 
         private bool IsPointInsideBoard(Vector3 point) 

@@ -122,7 +122,7 @@ namespace CrazyPawn.Implementation
             {
                 return;
             }
-            if (CameraRaycaster.PlaneCast(mousePosition, out var point, out var distance)) 
+            if (CameraRaycaster.PlaneCast(mousePosition, out var point)) 
             {
                 if (Mathf.Approximately(zoomDelta, 0)) 
                 {

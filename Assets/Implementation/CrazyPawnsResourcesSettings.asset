@@ -21,6 +21,7 @@ MonoBehaviour:
     ResourcePath: DeleteMaterial
   - Key: MaterialConnecterAvaiiable
     ResourcePath: ActiveConnectorMaterial
-  - Key: ConnectionLine
-    ResourcePath: Connection
-  PawnPath: PawnImpl
+  - Key: PawnConnectionLine
+    ResourcePath: PawnConnection
+  - Key: MouseConnectionLine
+    ResourcePath: MouseConnection

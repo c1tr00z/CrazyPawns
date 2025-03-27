@@ -19,6 +19,9 @@ namespace CrazyPawn.Implementation
             Container.DeclareSignal<ISimpleDragStartedSignal>().OptionalSubscriber();
             Container.DeclareSignal<ISimpleDragSignal>().OptionalSubscriber();
             Container.DeclareSignal<ISimpleDragFinishedSignal>().OptionalSubscriber();
+            Container.DeclareSignal<IConnectionStartedSignal>().OptionalSubscriber();
+            Container.DeclareSignal<IConnectionDragSignal>().OptionalSubscriber();
+            Container.DeclareSignal<IConnectionFinishedSignal>().OptionalSubscriber();
             
             Container.Bind<IInitializable>().To<SceneStarter>().AsSingle();
             Container.Bind<IAssetProvider>().To<AssetManager>().AsSingle();

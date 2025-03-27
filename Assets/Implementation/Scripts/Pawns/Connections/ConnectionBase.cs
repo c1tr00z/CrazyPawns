@@ -2,11 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 namespace CrazyPawn.Implementation 
 {
-    [RequireComponent(typeof(MeshRenderer))]
-    [RequireComponent(typeof(MeshFilter))]
-    public class Connection : MonoBehaviour 
+    public abstract class ConnectionBase : MonoBehaviour 
     {
-
         #region Private Fields
 
         private MeshFilter _meshFilter;
@@ -15,8 +12,6 @@ namespace CrazyPawn.Implementation
         
         private Mesh _mesh;
 
-        private List<PawnConnector> _points = new();
-
         private Material _lineMaterial;
 
         private CrazyPawnsImplSettings _implementationSettings;
@@ -24,6 +19,8 @@ namespace CrazyPawn.Implementation
         #endregion
 
         #region Accessors
+        
+        protected abstract Vector3[] VectorPoints { get; }
 
         private MeshFilter MeshFilter => this.GetCachedComponent(ref _meshFilter);
         
@@ -41,8 +38,6 @@ namespace CrazyPawn.Implementation
                 return material;
             });
 
-        public IEnumerable<PawnConnector> Points => _points;
-
         #endregion
 
         #region Class Implementation
@@ -51,17 +46,10 @@ namespace CrazyPawn.Implementation
         {
             _implementationSettings = implementationSettings;
         }
-
-        public void SetPoints(IEnumerable<PawnConnector> newPoints)
-        {
-            _points.Clear();
-            _points.AddRange(newPoints);
-            GenerateLineMesh();
-        }
     
-        public void GenerateLineMesh()
+        public virtual void GenerateLineMesh()
         {
-            if (_points.Count < 2)
+            if (VectorPoints.Length < 2)
             {
                 gameObject.SetActive(false);
                 return;
@@ -74,12 +62,12 @@ namespace CrazyPawn.Implementation
                 gameObject.SetActive(true);
             }
         
-            Vector3[] vertices = new Vector3[_points.Count];
-            int[] indices = new int[_points.Count];
+            Vector3[] vertices = new Vector3[VectorPoints.Length];
+            int[] indices = new int[VectorPoints.Length];
         
-            for (int i = 0; i < _points.Count; i++)
+            for (int i = 0; i < VectorPoints.Length; i++)
             {
-                vertices[i] = _points[i].transform.position;
+                vertices[i] = VectorPoints[i];
                 indices[i] = i;
             }
             

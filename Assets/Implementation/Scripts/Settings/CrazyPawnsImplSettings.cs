@@ -15,7 +15,9 @@ namespace CrazyPawn.Implementation {
 
         [SerializeField] public string PawnPrefabResourceKey;
 
-        [SerializeField] public string ConnectionPrefabResourceKey;
+        [SerializeField] public string PawnConnectionPrefabResourceKey;
+        
+        [SerializeField] public string MouseConnectionPrefabResourceKey;
         
         [SerializeField] public string PawnMaterialValidKey;
         

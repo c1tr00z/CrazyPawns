@@ -4,7 +4,7 @@ namespace CrazyPawn.Implementation
     {
         #region Methods
 
-        public void ReturnToPool(Connection connection);
+        public void ReturnToPool(PawnConnection pawnConnection);
 
         #endregion
     }
