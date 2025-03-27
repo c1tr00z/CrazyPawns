@@ -156,7 +156,7 @@ MonoBehaviour:
   _moveSpeed: 0.025
   _zoomSpeed: 3
   _zoomMaxSpeed: 6
-  _zoomSpeedDecreaseSpeed: 1
+  _zoomSpeedDecreaseSpeed: 5
 --- !u!114 &271863777
 MonoBehaviour:
   m_ObjectHideFlags: 0
