@@ -32,8 +32,6 @@ namespace CrazyPawn.Implementation
 
         private CancellationTokenSource _zoomMoveCancelTokenSrc;
 
-        private CancellationToken _zoomMoveCancelToken;
-
         #endregion
         
         #region Injected Fields
@@ -58,8 +56,6 @@ namespace CrazyPawn.Implementation
 
         private CameraRaycaster CameraRaycaster => this.GetCachedComponent(ref _cameraRaycaster);
 
-        private CancellationTokenSource ZoomMoveCancelTokenSrc => CommonUtils.GetCached(ref _zoomMoveCancelTokenSrc, () => new CancellationTokenSource());
-
         #endregion
 
         #region Unity Events
@@ -79,7 +75,7 @@ namespace CrazyPawn.Implementation
             _signalBus.Unsubscribe<ISimpleDragSignal>(OnSimpleDrag);
             _signalBus.Unsubscribe<ISimpleDragFinishedSignal>(OnSimpleDragFinished);
             
-            _zoomMoveCancelToken.ThrowIfCancellationRequested();
+            _zoomMoveCancelTokenSrc?.Cancel();
         }
 
         #endregion
@@ -89,7 +85,7 @@ namespace CrazyPawn.Implementation
         private void OnSimpleDragStarted(ISimpleDragStartedSignal signal) 
         {
             CalculateScreenCoefficient();
-            _zoomMoveCancelToken.ThrowIfCancellationRequested();
+            _zoomMoveCancelTokenSrc?.Cancel();
             _zoomInStarted = false;
             
             _dragStartedPosition = signal.MousePosition;
@@ -111,6 +107,8 @@ namespace CrazyPawn.Implementation
         private void OnSimpleDragFinished(ISimpleDragFinishedSignal signal) 
         {
             _dragStarted = false;
+            _zoomMoveCancelTokenSrc?.Dispose();
+            _zoomMoveCancelTokenSrc = new CancellationTokenSource();
         }
 
         private void CalculateScreenCoefficient() 
@@ -136,8 +134,7 @@ namespace CrazyPawn.Implementation
                 if (!_zoomInStarted) 
                 {
                     _zoomInStarted = true;
-                    _zoomMoveCancelToken = ZoomMoveCancelTokenSrc.Token;
-                    ZoomMove(_zoomMoveCancelToken);
+                    ZoomMove();
                 }
                 
                 var sign = Mathf.Sign(zoomDelta);
@@ -152,14 +149,14 @@ namespace CrazyPawn.Implementation
             }
         }
 
-        private async UniTask ZoomMove(CancellationToken cancellationToken) 
+        private async UniTask ZoomMove() 
         {
             while ((transform.position - _zoomMoveTargetPosition).magnitude > 0.1f && !Mathf.Approximately(_zoomForce, 0)) 
             {
                 var direction = (_zoomMoveTargetPosition - transform.position).normalized;
                 transform.position += _zoomForce * Time.deltaTime * direction;
                 _zoomForce += Mathf.Sign(_zoomForce) * -1 * _zoomSpeedDecreaseSpeed * Time.deltaTime;
-                await UniTask.Yield(cancellationToken);
+                await UniTask.Yield(_zoomMoveCancelTokenSrc.Token);
             }
 
             _zoomInStarted = false;
