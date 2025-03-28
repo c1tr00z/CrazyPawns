@@ -54,7 +54,7 @@ Shader "Custom/ConnectionShader"
                 float3 perpendicular = normalize(cross(dir, UNITY_MATRIX_IT_MV[2].xyz));
                 
                 // Толщина линии
-                float3 offset = perpendicular * _Thickness;
+                float3 offset = perpendicular * _Thickness / 2;
                 
                 g2f v[4];
                 
