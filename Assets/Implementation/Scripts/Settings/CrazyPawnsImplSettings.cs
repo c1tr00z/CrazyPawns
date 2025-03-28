@@ -19,10 +19,6 @@ namespace CrazyPawn.Implementation {
         
         [SerializeField] public string MouseConnectionPrefabResourceKey;
         
-        [SerializeField] [Range(0f, 1f)] public float ConnectionLineThickness;
-
-        [SerializeField] public Color ConnectionLineColor;
-        
         [SerializeField] public float HoldThreshold = 0.25f;
 
         [SerializeField] public float DragThreshold = 1f;

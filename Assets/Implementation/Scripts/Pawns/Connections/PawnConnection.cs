@@ -11,10 +11,6 @@ namespace CrazyPawn.Implementation
         #region Private Fields
 
         private List<Transform> _points = new();
-
-        private Material _lineMaterial;
-
-        private CrazyPawnsImplSettings _implementationSettings;
         
         #endregion
 

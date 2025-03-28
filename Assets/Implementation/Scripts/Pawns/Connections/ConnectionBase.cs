@@ -23,20 +23,12 @@ namespace CrazyPawn.Implementation
         protected abstract Vector3[] VectorPoints { get; }
 
         private MeshFilter MeshFilter => this.GetCachedComponent(ref _meshFilter);
-        
-        private MeshRenderer MeshRenderer => this.GetCachedComponent(ref _renderer);
 
         private Mesh Mesh => CommonUtils.GetCached(ref _mesh, () => {
             var newMesh = new Mesh();
             MeshFilter.mesh = newMesh;
             return newMesh;
         });
-
-        private Material LineMaterial =>
-            CommonUtils.GetCached(ref _lineMaterial, () => {
-                var material = Instantiate(MeshRenderer.sharedMaterial);
-                return material;
-            });
 
         #endregion
 
@@ -47,7 +39,7 @@ namespace CrazyPawn.Implementation
             _implementationSettings = implementationSettings;
         }
     
-        public virtual void GenerateLineMesh()
+        public void GenerateLineMesh()
         {
             if (VectorPoints.Length < 2)
             {
@@ -73,9 +65,6 @@ namespace CrazyPawn.Implementation
             
             Mesh.vertices = vertices;
             Mesh.SetIndices(indices, MeshTopology.Lines, 0);
-        
-            LineMaterial.SetColor("_Color", _implementationSettings.ConnectionLineColor);
-            LineMaterial.SetFloat("_Thickness", _implementationSettings.ConnectionLineThickness);
         }
 
         #endregion

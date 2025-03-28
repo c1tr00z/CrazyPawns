@@ -1,7 +1,7 @@
 using UnityEngine;
 namespace CrazyPawn.Implementation 
 {
-    public class SimpleDragSignal : ISimpleDragStartedSignal, ISimpleDragFinishedSignal
+    public class SimpleDragSignal : ISimpleDragStartedSignal, ISimpleDragSignal, ISimpleDragFinishedSignal
     {
         #region Accessors
 
